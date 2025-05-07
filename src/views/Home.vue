@@ -1,6 +1,6 @@
 <template>
   <div class="image-container" >
-    <el-text class="welcome-text">欢迎使用光学天文望远镜人工智能软件实验平台</el-text>
+    <el-text class="welcome-text">欢迎使用智能中台建模平台</el-text>
   </div>
 </template>
 

@@ -3,6 +3,7 @@
     <canvas id="s-canvas" :width="contentWidth" :height="contentHeight"></canvas>
   </div>
 </template>
+
 <script>
 export default{
   name: 'SIdentify',

@@ -1,6 +1,6 @@
 <template>
   <div style="height: 50px;line-height: 50px;width: 100vw;border-bottom: 1px solid #cccccc;display: flex;z-index:999999;  top:0;  background-color: white;">
-    <span style="width: auto;padding-left: 20px;font-weight: bold;color: dodgerblue;font-size: 17px">光学天文望远镜人工智能软件实验平台</span>
+    <span style="width: auto;padding-left: 20px;font-weight: bold;color: dodgerblue;font-size: 17px">智能中台建模平台</span>
 <!--    <div style="flex: 1"></div>-->
     <div style="flex: 1;text-align: right;margin-right: 30px;height: 50px;line-height: 50px">
         <el-dropdown>
