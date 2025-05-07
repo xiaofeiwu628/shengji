@@ -1,0 +1,66 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+/*以el-button为基础*/
+.my-button{
+    z-index: 100;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px 0 rgba(91, 156, 255, 0.9)
+}
+.my-title{
+    font-size:18px;
+    font-family:Microsoft YaHei;
+    font-weight:bold;
+}
+.bar-vertical{
+    width: 6px;
+    height: 25px;
+    background-color: black;
+    border-radius: 2px;
+}
+.task-title-div{
+    display: inline-block;
+    background-color: black;
+    height: 18px;
+    width: 3px;
+    margin-right: 10px;
+    vertical-align: middle
+}
+.task-title-name{
+    display: inline-block;
+    width:120px;
+    text-align: left;
+    vertical-align: middle;
+    font-weight: bold
+}
+
+.el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell{
+    background: rgba(136, 136, 136, 0.15);
+}
+
+.el-table--enable-row-hover .el-table__body tr:hover>td.el-table__cell{
+    background-color: rgba(114, 114, 114, 0.3);
+}
+
+.el-table--border::after,.el-table--group::after,.el-table::before {
+    background-color: rgba(6, 106, 155,0.1);
+}
+
+.el-table--border{
+    border-top: 1px solid rgba(130, 178, 236, 0.1);
+    border-left: 1px solid rgba(130, 178, 236, 0.1);
+}
+.el-table--border::after,
+.el-table--group::after,
+.el-table::before {
+    background-color: rgba(6, 106, 155,0.1);
+}
+
+.el-table th.el-table__cell,
+.el-table td.el-table__cell,
+.el-table th.el-table__cell.is-leaf,
+.el-table td.el-table__cell.is-leaf{
+    border: 1px solid rgba(6, 106, 155, 0.1);
+}

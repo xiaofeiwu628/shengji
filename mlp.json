@@ -1,0 +1,147 @@
+{
+  "task_id": 1,
+  "select_data": {
+    "set_id": "1",
+    "table_id": "1",
+    "task_type": "regression",
+    "time_column": "time",
+    "target_column": "temp2",
+    "characteristic_columns": [
+      "temp",
+      "rhum"
+    ]
+  },
+  "feature_engineering_strategy": {
+    "record_processing": {
+      "all": false,
+      "columns": {
+        "temp": {
+          "contact": "nd",
+          "type": "between",
+          "range": [
+            18,
+            19
+          ]
+        },
+        "rhum": {
+          "contact": "and",
+          "type": "less",
+          "range": [
+            80
+          ]
+        }
+      }
+    },
+    "column_processing": {
+      "default": false,
+      "default_config": [
+        {
+          "missing_value_filling": {
+            "data_filling_strategy": "mean"
+          }
+        },
+        {
+          "scaling": "Zscore"
+        }
+      ],
+      "single_config": {
+        "temp": [
+          {
+            "missing_value_filling": {
+              "data_filling_strategy": "mean"
+            }
+          },
+          {
+            "scaling": "Zscore"
+          }
+        ],
+        "rhum": [
+          {
+            "missing_value_filling": {
+              "data_filling_strategy": "mean"
+            }
+          },
+          {
+            "scaling": "Zscore"
+          }
+        ]
+      }
+    }
+  },
+  "model_parameters": {
+    "type": "MLP",
+    "hyperparameter": {
+      "batch_size": {
+        "data_type": "int",
+        "tuneParam": false,
+        "defaultValue": [
+          32
+        ]
+      },
+      "solver": {
+        "tuneParam": true,
+        "tuneParam_type": "multi_select",
+        "defaultValue": [
+          "sgd"
+        ],
+        "value": [
+          "sgd",
+          "adam"
+        ]
+      },
+      "activation": {
+        "tuneParam": false,
+        "defaultValue": [
+          "relu"
+        ]
+      },
+      "n_layers": {
+        "data_type": "int",
+        "tuneParam": true,
+        "tuneParam_type": "steps",
+        "defaultValue": 1,
+        "low_bound": 1,
+        "high_bound": 3,
+        "step_type": "multiply",
+        "step_value": 2
+      },
+      "model_evaluate": [
+        "neg_mean_absolute_error",
+        "neg_mean_squared_error",
+        "explained_variance",
+        "r2"
+      ],
+      "learning_rate": {
+        "data_type": "float",
+        "tuneParam": false,
+        "defaultValue": [
+          0.001
+        ]
+      },
+      "max_iter": {
+        "data_type": "int",
+        "tuneParam": true,
+        "tuneParam_type": "steps",
+        "defaultValue": 200,
+        "low_bound": 200,
+        "high_bound": 1000,
+        "step_type": "multiply",
+        "step_value": 2
+      },
+      "alpha": {
+        "data_type": "float",
+        "tuneParam": false,
+        "defaultValue": [
+          0.001
+        ]
+      }
+    }
+  },
+  "train_parameters": {
+    "cv_enabled": false,
+    "K_Fold": 4,
+    "val_set_division_scale": 0.1,
+    "test_set_division_scale": 0.2,
+    "automatically_store_after_training": 1
+  }
+}
