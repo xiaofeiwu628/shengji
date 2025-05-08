@@ -2524,26 +2524,45 @@ export default {
     computeNumOfGrid() {
       const computeList = [];
       this.computeNumString = "";
-      this.model.forEach((item) => {
+      this.gridSearchError = false; // 重置错误标志位
+    
+      for (const item of this.model) {
         if (item.tuneParam) {
           if (item.hasOwnProperty("step")) {
-            console.log(item, "item in 计算网格搜索次数");
             if (item.area.high_bound !== "" && item.area.low_bound !== "" && item.step.value !== "") {
               let low_bound = Number(item.area.low_bound);
               let high_bound = Number(item.area.high_bound);
               let stepValue = Number(item.step.value);
+    
               if (high_bound >= low_bound) {
                 item.gridError = false;
-                let difference = high_bound - low_bound;
                 if (item.step.typeValue === "+") {
+                  let difference = high_bound - low_bound;
                   let num = Math.floor(difference / stepValue);
                   computeList.push(num + 1);
                 } else if (item.step.typeValue === "×") {
-                  if (low_bound === 0) {
+                  if (low_bound === 0 ) {
+                    if (!this.gridSearchError) { // 避免重复弹出提示
+                      this.gridSearchError = true;
+                      ElMessage({
+                        message: "乘法步长不能为1，请修改步长值,输入合适的数值！",
+                        type: "error",
+                        offset: 60,
+                      });
+                    }
                     item.gridError = true;
+                    return; // 立即退出整个方法
                   } else {
                     let start = low_bound;
                     let num = 0;
+                    if(stepValue === 1){
+                      ElMessage({
+                        message: "乘法步长不能为1，请修改步长值,输入合适的数值！",
+                        type: "warning",
+                        offset: 60,
+                      });
+                      stepValue = 2;
+                    }
                     while (start * stepValue <= high_bound) {
                       start = start * stepValue;
                       num++;
@@ -2559,24 +2578,26 @@ export default {
             computeList.push(item.areaValue.length);
           }
         }
-      });
-      let total = 1;
-      if (computeList.length > 0) {
-        computeList.forEach((item, index) => {
-          total = total * item;
-          if (index != computeList.length - 1) {
-            this.computeNumString += item;
-            this.computeNumString += "×";
-          } else {
-            this.computeNumString += item;
-            this.computeNumString += "=";
-          }
-        });
-        this.computeNumString += total;
-      } else {
-        this.computeNumString = 0;
       }
-      console.log(this.gridSearchError, "this.gridSearchError");
+    
+      if (!this.gridSearchError) { // 只有在没有错误时才计算总数
+        let total = 1;
+        if (computeList.length > 0) {
+          computeList.forEach((item, index) => {
+            total = total * item;
+            if (index != computeList.length - 1) {
+              this.computeNumString += item;
+              this.computeNumString += "×";
+            } else {
+              this.computeNumString += item;
+              this.computeNumString += "=";
+            }
+          });
+          this.computeNumString += total;
+        } else {
+          this.computeNumString = 0;
+        }
+      }
     },
     //在特征策略页下一步或者上一步时判断网格搜索数值是否填写正确
     checkGridError(param) {
