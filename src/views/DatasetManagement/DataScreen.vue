@@ -1028,9 +1028,9 @@ export default {
           }
         });
     },
-    dataPreviewSave() {
-      let datatype = "";
-      let temp = [];
+    dataPreviewSave() {//保存预览数据
+      let datatype = "";//字段类型
+      let temp = [];//是否导入
       for (let i = 0; i < this.fileColumnNum; i++) {
         datatype = datatype.concat(this.transData[i][11], ",");
         temp[i] = 0;
@@ -1150,7 +1150,7 @@ export default {
         });
       }
     },
-    tableUpdate(row) {
+    tableUpdate(row) {//更新数据表窗口
       //进入数据表更新窗口
       if (row.modify_permission === 0) {
         this.$message({
@@ -1193,7 +1193,7 @@ export default {
       this.addDatasetForm.is_public = 0;
       this.addDatasetVisible = true;
     },
-    datasetUpdate(row) {
+    datasetUpdate(row) {//更新数据集窗口
       //更新数据集窗口
       if (row.modify_permission == "他人") {
         this.$message({

@@ -107,6 +107,11 @@ export default {
         heigh = standarDevRangeOfThree.up;
         low = standarDevRangeOfThree.low;
       }
+      else {
+    // 处理大于3的阈值情况，直接计算对应倍数的标准差范围
+        heigh = this.message.avg + multiple * this.message.stdev;
+        low = this.message.avg - multiple * this.message.stdev;
+      }
 
       //判断柱状图是否超过警戒线
       function JudgeBar(name) {

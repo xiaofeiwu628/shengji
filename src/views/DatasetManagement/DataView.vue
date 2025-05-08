@@ -318,7 +318,7 @@ export default {
         .then((res) => {
           if (res.code === "0") {
             console.log(res.data, "res.data in load");
-            this.tableData = res.data;
+            this.tableData = res.data;//scope.row数据来自于这里
             this.LineNum = res.data.length;
             this.total = res.data.length;
             // this.ChoseColumn()
@@ -491,7 +491,7 @@ export default {
 
       this.getOutlier();
     },
-    getOutlier() {
+    getOutlier() {//获取离群点数据
       if (this.threshold <= 0) {
         this.$message({
           type: "error",
