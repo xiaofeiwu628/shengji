@@ -18,7 +18,7 @@ module.exports = defineConfig({
     client: { overlay: { runtimeErrors: false } },
     
     // 设置开发服务器端口为9876
-    port: 9876,
+    port: 9877,
 
     // 代理配置（解决跨域问题）
     proxy: {
