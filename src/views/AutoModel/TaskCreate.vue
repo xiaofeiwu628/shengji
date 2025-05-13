@@ -2520,12 +2520,21 @@ export default {
         this.modelList = ["GlobalPointer"]
       }
     },
+    // 调试工具函数，添加到 methods 中
+    checkModelParametersOrder() {
+      if (this.modelName === "Transformer") {
+        console.log("Transformer 参数顺序检查:");
+        this.model.forEach((item, index) => {
+          console.log(`${index}: ${item.parameter} (tuneParam: ${item.tuneParam})`);
+        });
+      }
+    },
     //计算网格搜索次数
     computeNumOfGrid() {
       const computeList = [];
       this.computeNumString = "";
       this.gridSearchError = false; // 重置错误标志位
-    
+
       for (const item of this.model) {
         if (item.tuneParam) {
           if (item.hasOwnProperty("step")) {
@@ -2533,7 +2542,7 @@ export default {
               let low_bound = Number(item.area.low_bound);
               let high_bound = Number(item.area.high_bound);
               let stepValue = Number(item.step.value);
-    
+
               if (high_bound >= low_bound) {
                 item.gridError = false;
                 if (item.step.typeValue === "+") {
@@ -2541,34 +2550,31 @@ export default {
                   let num = Math.floor(difference / stepValue);
                   computeList.push(num + 1);
                 } else if (item.step.typeValue === "×") {
-                  if (low_bound === 0 ) {
-                    if (!this.gridSearchError) { // 避免重复弹出提示
-                      this.gridSearchError = true;
-                      ElMessage({
-                        message: "乘法步长不能为1，请修改步长值,输入合适的数值！",
-                        type: "error",
-                        offset: 60,
-                      });
-                    }
+                  if (low_bound <= 0) { // 修复 low_bound 为 0 的问题
+                    this.gridSearchError = true;
                     item.gridError = true;
-                    return; // 立即退出整个方法
-                  } else {
-                    let start = low_bound;
-                    let num = 0;
-                    if(stepValue === 1){
-                      ElMessage({
-                        message: "乘法步长不能为1，请修改步长值,输入合适的数值！",
-                        type: "warning",
-                        offset: 60,
-                      });
-                      stepValue = 2;
-                    }
-                    while (start * stepValue <= high_bound) {
-                      start = start * stepValue;
-                      num++;
-                    }
-                    computeList.push(num + 1);
+                    ElMessage({
+                      message: "乘法步长无法从 0 开始，请修改调参范围或步长值！",
+                      type: "error",
+                      offset: 60,
+                    });
+                    continue; // 跳过当前参数，继续计算其他参数
                   }
+                  if (stepValue === 1) {
+                    ElMessage({
+                      message: "乘法步长不能为 1，请修改步长值！目前已将默认值定为2！",
+                      type: "warning",
+                      offset: 60,
+                    });
+                    stepValue = 2; // 设置默认步长为 2
+                  }
+                  let start = low_bound;
+                  let num = 0;
+                  while (start * stepValue <= high_bound) {
+                    start = start * stepValue;
+                    num++;
+                  }
+                  computeList.push(num + 1);
                 }
               } else {
                 item.gridError = true;
@@ -2579,7 +2585,7 @@ export default {
           }
         }
       }
-    
+
       if (!this.gridSearchError) { // 只有在没有错误时才计算总数
         let total = 1;
         if (computeList.length > 0) {
@@ -2620,6 +2626,7 @@ export default {
     //拼接字符串
     dataProcess() {
       console.log(this.model, "this.model in dataprocess");
+      this.checkModelParametersOrder();
       let setData = [];
       console.log(this.selectedSingleCol, "this.selectedsinglecol 拼接字符串");
       this.selectedSingleCol.forEach((item, index) => {
@@ -2819,6 +2826,8 @@ export default {
 
       //针对Transformer模型
       if (this.modelName === "Transformer") {
+        console.log("Transformer模型参数设置");
+        this.checkModelParametersOrder();
         this.middleData.model_parameters.hyperparameter["batch_size"] = {
           data_type: "int",
           tuneParam: this.model[0].tuneParam,
@@ -2837,30 +2846,33 @@ export default {
         this.middleData.model_parameters.hyperparameter["solver"] = {
           tuneParam: this.model[4].tuneParam,
         };
-        this.middleData.model_parameters.hyperparameter["seq_len"] = {
-          data_type: "int",
+        this.middleData.model_parameters.hyperparameter["dropout"] = {
+          data_type: "float",
           tuneParam: this.model[5].tuneParam,
         };
-        this.middleData.model_parameters.hyperparameter["d_model"] = {
+        this.middleData.model_parameters.hyperparameter["seq_len"] = {
           data_type: "int",
           tuneParam: this.model[6].tuneParam,
         };
-        this.middleData.model_parameters.hyperparameter["nhead"] = {
+        this.middleData.model_parameters.hyperparameter["d_model"] = {
           data_type: "int",
           tuneParam: this.model[7].tuneParam,
         };
-        this.middleData.model_parameters.hyperparameter["nhid"] = {
+        this.middleData.model_parameters.hyperparameter["nhead"] = {
           data_type: "int",
           tuneParam: this.model[8].tuneParam,
         };
-        this.middleData.model_parameters.hyperparameter["nlayers"] = {
+        this.middleData.model_parameters.hyperparameter["nhid"] = {
           data_type: "int",
           tuneParam: this.model[9].tuneParam,
         };
-        this.middleData.model_parameters.hyperparameter["dropout"] = {
-          data_type: "float",
+        this.middleData.model_parameters.hyperparameter["nlayers"] = {
+          data_type: "int",
           tuneParam: this.model[10].tuneParam,
         };
+
+
+        console.log(this.middleData.model_parameters.hyperparameter,  "this.middleData.model_parameters.hyperparameter2862");
       }
 
       //针对GlobalPointer模型
@@ -2903,6 +2915,7 @@ export default {
         };
       }
 
+
       //根据各个参数是否调参拼接字符串
       this.model.forEach((item, index) => {
         if (item.tuneParam) {
@@ -2931,7 +2944,7 @@ export default {
           }
         }
       });
-
+      console.log(this.middleData.model_parameters.hyperparameter, "this.middleData.model_parameters.hyperparameter2934");
       //记录处理——使用部分记录筛选条件
       if (this.middleData.feature_engineering_strategy.record_processing.all === false) {
         this.partialRowList.forEach((item) => {
@@ -3090,7 +3103,7 @@ export default {
           }
         });
       }
-      console.log(this.middleData);
+      console.log(this.middleData, "this.middleData111");
     },
     //将拼接的字符串保存到taskInfo以便发给后端，同时用于测试拼接字符串
     checkConfigurationString() {
@@ -3146,12 +3159,14 @@ export default {
         return;
       }
       this.taskInfo = {};
+      console.log('taskInfo初始状态:', JSON.parse(JSON.stringify(this.taskInfo)));
       this.dataProcess();
+      console.log(this.middleData, "this.middleData in finishCreate");
       this.taskInfo["name"] = this.taskName;
       this.taskInfo["task_desc"] = this.taskDescription;
       this.taskInfo["type"] = this.taskTypeValue;
       this.taskInfo["configuration"] = this.middleData;
-      console.log(this.taskInfo);
+      console.log(this.taskInfo, "this.taskInfo111");
       taskAdd(this.taskInfo)
         .then((res) => {
           console.log(res);
@@ -3232,13 +3247,15 @@ export default {
 </script>
 
 <style scoped>
-/deep/ .input-a input::-webkit-outer-spin-button,
-/deep/ .input-a input::-webkit-inner-spin-button {
+:deep(.input-a input::-webkit-outer-spin-button),
+:deep(.input-a input::-webkit-inner-spin-button) {
   -webkit-appearance: none;
 }
 
-/deep/ .input-a input[type="number"] {
+:deep(.input-a input[type="number"]) {
+  -webkit-appearance: textfield;
   -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 .input {

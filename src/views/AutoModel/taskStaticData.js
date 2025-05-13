@@ -618,7 +618,7 @@ export const parameterTableTransformer = [
         tuneParamList: [true, false],
         tuneParam_type: 'steps',
         area: {
-            low_bound: 0,
+            low_bound: 0.001,
             high_bound: 1,
         },
         step: {
