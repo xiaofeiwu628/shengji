@@ -85,7 +85,7 @@ export default {
     this.serviceId = route.query.serviceId;
     this.serviceName = route.query.serviceName;
     this.serviceState = route.query.serviceState;
-    this.logConnection(`ws://192.168.109.44:8090/task/read_log/${this.serviceId}`,'serviceMessages');
+    this.logConnection(`ws://192.168.109.198:8090/task/read_log/${this.serviceId}`,'serviceMessages');
   },
   beforeUnmount() {
     //关闭页面后将所有的websocket连接关闭
@@ -119,7 +119,7 @@ export default {
             if(res.data.service_state === 'running'){
               node_id = res.data.extra_conf.node_id;
               c_id = res.data.extra_conf.container_id;
-              let url = `ws://192.168.109.44:8090/container/read_log/${node_id}/${c_id}`
+              let url = `ws://192.168.109.198:8090/container/read_log/${node_id}/${c_id}`
               if(!this.wsDict[url]){
                 this.logConnection(url,'containerMessage')
               }

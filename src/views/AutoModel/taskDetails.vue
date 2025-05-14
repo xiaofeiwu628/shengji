@@ -650,7 +650,7 @@ export default {
       _this.logLoading = true;
       let mark = 0;
       let messageNumber = 0;
-      const ws = new WebSocket(`ws://192.168.109.44:8090/task/read_log/${this.taskId}`);
+      const ws = new WebSocket(`ws://192.168.109.198:8090/task/read_log/${this.taskId}`);
       _this.ws = ws;
       ws.onopen = function () {
 
