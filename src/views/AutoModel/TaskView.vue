@@ -1,30 +1,114 @@
 <template>
-  <div>
-    <div style="margin: 20px 0 0 2%">
+  <div class="auto-modeling">
+    <!-- 顶部导航区域 -->
+    <div class="header-area">
       <el-breadcrumb :separator-icon="ArrowRight">
-        <el-breadcrumb-item :to="{ path: '/taskView' }">自动建模</el-breadcrumb-item>
+        <el-breadcrumb-item class="tech-title">
+          <el-icon><Cpu /></el-icon>
+          自动建模
+        </el-breadcrumb-item>
       </el-breadcrumb>
+      
+      <!-- 任务概览卡片 -->
+      <div class="task-metrics">
+        <div class="metric-card">
+          <div class="metric-value">{{tableData.length}}</div>
+          <div class="metric-label">任务总数</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-value">{{getTasksByState("训练中").length}}</div>
+          <div class="metric-label">训练中</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-value">{{getTasksByState("训练完成").length}}</div>
+          <div class="metric-label">已完成</div>
+        </div>
+        <!-- 新增停止状态统计 -->
+        <div class="metric-card">
+          <div class="metric-value">{{getTasksByState("停止").length}}</div>
+          <div class="metric-label">已停止</div>
+        </div>
+        <!-- 新增异常状态统计 -->
+        <div class="metric-card">
+          <div class="metric-value">{{getTasksByState("异常").length}}</div>
+          <div class="metric-label">异常任务</div>
+        </div>
+      </div>
+
     </div>
-    <!--    <el-divider style="margin: 15px 0 0 0" />-->
-    <div style="background-color: white; margin: 20px; min-height: calc(100vh - 124px)">
-      <div style="text-align: left; margin: 20px 0 0 2%; display: inline-block; width: 93%">
-        <el-button type="primary" :icon="Plus" @click="taskCreate" round>新建</el-button>
+
+    <div class="content-panel">
+      <div class="action-bar">
+        <div class="left-area">
+          <el-button type="primary" :icon="Plus" @click="taskCreate" class="create-btn">新建任务</el-button>
+        </div>
+        
+        <div class="middle-area">
+          <!-- 添加任务筛选功能 -->
+          <div class="filter-group">
+            <span class="filter-label">任务状态：</span>
+            <el-radio-group v-model="statusFilter" size="small" @change="filterByStatus">
+              <el-radio-button label="all">全部</el-radio-button>
+              <el-radio-button label="training">训练中</el-radio-button>
+              <el-radio-button label="finished">已完成</el-radio-button>
+              <el-radio-button label="stopped">已停止</el-radio-button>
+              <el-radio-button label="error">异常</el-radio-button>
+            </el-radio-group>
+          </div>
+        </div>
+        
+        <!-- 优化后的搜索输入框部分 -->
+        <div class="right-area">
+          <div class="search-box">
+            <el-input
+              v-model="searchQuery"
+              placeholder="搜索任务名称或ID"
+              class="search-input"
+              clearable
+              @keyup.enter="handleSearch"
+            >
+              <template #prefix>
+                <el-icon><Search /></el-icon>
+              </template>
+              <template #append>
+                <el-button @click="handleSearch">
+                  <el-icon><Search /></el-icon>
+                </el-button>
+              </template>
+            </el-input>
+            <!-- 搜索结果提示 -->
+            <div v-if="isFiltered" class="search-result-info">
+              <span>
+                找到 <b>{{ tableData.length }}</b> 条结果
+                <el-button type="text" @click="clearSearch" class="clear-search">
+                  <el-icon><Close /></el-icon>清除筛选
+                </el-button>
+              </span>
+            </div>
+          </div>
+          
+          <el-button 
+            class="refresh-btn" 
+            @click="loadTask" 
+            :loading="taskLoading"
+            type="primary"
+            plain>
+            <el-icon class="refresh-icon" :class="{ 'is-loading': taskLoading }"><Refresh /></el-icon>
+            刷新列表
+          </el-button>
+        </div>
       </div>
-      <div style="text-align: right; margin: 20px 2% 0 0; display: inline-block; vertical-align: bottom">
-        <el-icon size="20px" @click="loadTask" style="cursor: pointer">
-          <Refresh />
-        </el-icon>
-      </div>
-      <!--    任务列表-->
-      <div>
+      
+      <!--任务列表-->
+      <div class="table-container">
         <el-table
           :data="tableData"
           border
-          style="width: 96%; margin: 20px 0 20px 2%"
           v-loading="taskLoading"
           :row-style="{ height: '65px' }"
           :cell-style="{ 'text-align': 'center' }"
-          :header-cell-style="{ 'text-align': 'center' }"
+          :header-cell-style="{ 'text-align': 'center', background: '#1a2942', color: '#fff' }"
+          class="task-table"
         >
           <el-table-column type="index" label="ID" min-width="5%" align="center" />
           <el-table-column prop="name" label="任务名称" min-width="10%" align="center" />
@@ -113,7 +197,8 @@
         </el-table>
       </div>
     </div>
-
+  </div>
+    <div>
     <!--    执行情况弹窗-->
     <div>
       <el-dialog v-model="singleTaskDialogVisible" :title="currentTaskId" width="1000px">
@@ -236,8 +321,9 @@
   </div>
 </template>
 
+
 <script>
-import { ArrowRight, Plus } from "@element-plus/icons-vue";
+import { ArrowRight, Plus,Refresh,Cpu, Search, Close } from "@element-plus/icons-vue";
 import router from "@/router";
 import request from "@/utils/request";
 import { ElMessage } from "element-plus";
@@ -246,10 +332,22 @@ import { dictionaryC2E, dictionaryE2C } from "./taskStaticData";
 
 export default {
   name: "TaskView",
+  components: {
+    ArrowRight,
+    Plus,
+    Refresh,
+    Cpu,
+    Search,
+    Close,
+  },
   data() {
     const C2E = dictionaryC2E;
     const E2C = dictionaryE2C;
     return {
+      statusFilter: "all", // 任务状态筛选
+      searchQuery: "", // 任务搜索查询
+      originalTableData: [], // 原始任务数据
+      isFiltered: false, // 是否有筛选结果
       ArrowRight,
       Plus,
       taskLoading: false,
@@ -285,17 +383,130 @@ export default {
       },
     };
   },
-  components: {},
   created() {
     this.loadTask();
     this.form.isPublic = "不公开";
   },
   methods: {
+    // 新增：处理搜索事件
+    handleSearch() {
+      if (!this.searchQuery.trim()) {
+        // 如果搜索框为空，还原到筛选状态
+        this.filterByStatus();
+        this.isFiltered = this.statusFilter !== 'all';
+        return;
+      }
+      
+      // 先基于原始数据进行状态筛选
+      let filteredData = [...this.originalTableData];
+      
+      if (this.statusFilter !== 'all') {
+        const statusMap = {
+          'training': '训练中',
+          'finished': '训练完成',
+          'stopped': '停止',
+          'error': '异常',
+        };
+        
+        filteredData = filteredData.filter(item => 
+          item.state === statusMap[this.statusFilter]
+        );
+      }
+      
+      // 再进行关键词搜索
+      const query = this.searchQuery.toLowerCase().trim();
+      this.tableData = filteredData.filter(item => 
+        (item.name && item.name.toLowerCase().includes(query)) || 
+        (item.task_id && item.task_id.toLowerCase().includes(query))
+      );
+      
+      // 设置筛选状态
+      this.isFiltered = true;
+      
+      // 如果没有找到结果，显示提示
+      if (this.tableData.length === 0) {
+        ElMessage({
+          message: "没有找到匹配的任务",
+          type: "info",
+          offset: 60,
+        });
+      }
+    },
+    // 新增：清除搜索
+    clearSearch() {
+      this.searchQuery = "";
+      this.statusFilter = "all";
+      this.tableData = [...this.originalTableData];
+      this.isFiltered = false;
+    },
+    
+    // 修改：状态筛选方法
+    filterByStatus() {
+      if (this.statusFilter === 'all') {
+        this.tableData = [...this.originalTableData];
+        this.isFiltered = false;
+      } else {
+        const statusMap = {
+          'training': '训练中',
+          'finished': '训练完成',
+          'stopped': '停止',
+          'error': '异常',
+        };
+        
+        this.tableData = this.originalTableData.filter(item => 
+          item.state === statusMap[this.statusFilter]
+        );
+        this.isFiltered = true;
+      }
+      
+      // 清空搜索框
+      this.searchQuery = "";
+    },
+    getTasksByState(state) {
+      return this.tableData.filter((task) => task.state === state);
+    },//获取指定状态的任务
     taskCreate() {
       router.push("/taskCreate");
     },
+    // 根据任务状态筛选
+    filterByStatus() {
+      if (this.statusFilter === 'all') {
+        this.tableData = [...this.originalTableData];
+      } else {
+        const statusMap = {
+          'training': '训练中',
+          'finished': '训练完成',
+          'stopped': '停止',
+          'error': '异常',
+        };
+        
+        this.tableData = this.originalTableData.filter(item => 
+          item.state === statusMap[this.statusFilter]
+        );
+      }
+      
+      // 应用搜索条件（如果有）
+      if (this.searchQuery) {
+        this.searchTasks();
+      }
+    },
+    // 根据关键词搜索
+    searchTasks() {
+      // 先应用状态筛选
+      this.filterByStatus();
+      
+      if (!this.searchQuery) return;
+      
+      // 再应用关键词搜索
+      const query = this.searchQuery.toLowerCase();
+      this.tableData = this.tableData.filter(item => 
+        item.name.toLowerCase().includes(query) || 
+        item.task_id.toLowerCase().includes(query)
+      );
+    },
     loadTask(param, time) {
       this.taskLoading = true;
+      this.isFiltered = false;// 重置筛选状态
       setTimeout(
         () => {
           request("/TaskManage/GetTaskList", {
@@ -311,7 +522,7 @@ export default {
                 item["state"] = this.E2C[item.state];
               });
               this.tableData = res.data;
-
+              this.originalTableData = [...res.data];
               this.taskLoading = false;
             })
             .catch((err) => {
@@ -324,6 +535,7 @@ export default {
         },
         time ? time : 1000,
       );
+
     },
     taskDelete(param) {
       const dele = { task_id: param.task_id };
@@ -592,14 +804,251 @@ export default {
 </script>
 
 <style scoped>
+.auto-modeling {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.header-area {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 30px;
+  background: linear-gradient(to right, #4c75a3, #4c75a3);
+  border-radius: 8px;
+  color: white;
+  margin: 20px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.tech-title {
+  font-size: 24px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.2);
+  color: #ffffff !important;
+}
+
+/* 面包屑内嵌套元素样式 */
+:deep(.tech-title span),
+:deep(.tech-title div),
+:deep(.tech-title a) {
+  color: #ffffff !important;
+}
+
+.tech-title .el-icon {
+  font-size: 28px;
+  color: #ffffff;
+}
+
+.task-metrics {
+  display: flex;
+  gap: 20px;
+}
+
+.metric-card {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  padding: 10px 20px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.metric-card:hover {
+  transform: translateY(-3px);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.metric-value {
+  font-size: 26px;
+  font-weight: 600;
+}
+
+.metric-label {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.content-panel {
+  background-color: white;
+  margin: 0 20px 20px;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  min-height: calc(100vh - 210px);
+}
+
+
+
+.create-btn {
+  background: linear-gradient(to right, #1a2942, #2a476e);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  transition: all 0.3s;
+}
+
+.create-btn:hover {
+  background: linear-gradient(to right, #2a476e, #1a2942);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 15px rgba(26, 41, 66, 0.2);
+}
+
+
+.table-container {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.task-table {
+  width: 100%;
+}
+
+/* 状态标签样式调整 */
+:deep(.el-tag) {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-weight: 500;
+  min-width: 70px;
+}
+
+/* 表格行悬停效果 */
+:deep(.el-table__row) {
+  transition: all 0.2s;
+}
+
+:deep(.el-table__row:hover) {
+  background-color: #f0f8ff !important;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.03);
+}
+
+/* 保留已有的样式 */
 .input {
   width: 260px;
   margin-left: 20px;
   text-align: left;
 }
-.table-button {
-  /*width: 15%;*/
-  /*margin: 0;*/
-  /*padding: 0;*/
+/* 修改刷新按钮样式 */
+.refresh-btn {
+  color: #4c75a3;
+  background-color: rgba(76, 117, 163, 0.05);
+  border-color: #4c75a3;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.refresh-btn:hover {
+  background-color: rgba(76, 117, 163, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 3px 8px rgba(76, 117, 163, 0.2);
+}
+
+.refresh-icon {
+  font-size: 16px;
+  transition: transform 0.6s ease;
+}
+
+/* 添加点击动画效果 */
+.refresh-btn:active .refresh-icon {
+  transform: rotate(360deg);
+}
+
+/* 加载中的动画效果 */
+.refresh-icon.is-loading {
+  animation: spin 1.2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+/* 操作栏样式优化 */
+.action-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 15px 20px;
+  background-color: #f9fafc;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.left-area, .right-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.middle-area {
+  display: flex;
+  align-items: center;
+  flex-grow: 1;
+  margin: 0 20px;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  margin-left: 15px;
+}
+
+.filter-label {
+  margin-right: 10px;
+  font-size: 14px;
+  color: #606266;
+}
+
+:deep(.el-radio-group .el-radio-button__inner) {
+  padding: 6px 12px;
+}
+
+.search-input {
+  width: 220px;
+  margin-right: 12px;
+}
+/* 搜索框和结果提示样式 */
+.search-box {
+  display: flex;
+  flex-direction: column;
+  margin-right: 12px;
+}
+
+.search-input {
+  width: 250px;
+}
+
+.search-result-info {
+  font-size: 12px;
+  color: #606266;
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
+}
+
+.search-result-info b {
+  color: #409eff;
+  margin: 0 2px;
+}
+
+.clear-search {
+  margin-left: 8px;
+  padding: 0;
+  font-size: 12px;
+}
+
+:deep(.clear-search .el-icon) {
+  margin-right: 2px;
 }
 </style>
