@@ -75,12 +75,34 @@
           >
             <el-table-column type="expand">
               <template v-slot="slot">
-                <el-table :data="slot.row.children" style="width: 96%; margin-left: auto" border stripe>
+                <!-- 添加展开数据表的标题区域 -->
+                <div class="expanded-table-header">
+                  <div class="expanded-table-title">
+                    <el-icon><Grid /></el-icon>
+                    <span>{{ slot.row.set_name }} 的数据表列表 ({{ slot.row.children?.length || 0 }}个)</span>
+                  </div>
+                </div>
+                <el-table 
+                  :data="slot.row.children" 
+                  class="expanded-table"
+                  border 
+                  stripe
+                  :header-cell-style="{ background: '#f5f7fa', color: '#1a2942', fontWeight: 600 }"
+                  >
                   <el-table-column prop="table_id" label="数据表ID" min-width="13%" />
                   <el-table-column prop="table_name" label="数据表名称" min-width="13%" />
                   <el-table-column prop="row_num" label="行数" min-width="13%" />
                   <el-table-column prop="col_num" label="列数" min-width="13%" />
-                  <el-table-column prop="table_type" label="类型" min-width="13%" />
+                  <el-table-column prop="table_type" label="类型" min-width="13%">
+                    <template #default="scope">
+                    <el-tag 
+                      :type="scope.row.table_type === '.csv' ? 'primary' : 'warning'"
+                      effect="light"
+                      size="small">
+                      {{ scope.row.table_type }}
+                    </el-tag>
+                  </template>
+                  </el-table-column>
                   <el-table-column prop="table_desc" label="描述" min-width="13%" />
                   <!-- 数据表扩展区操作按钮 -->
                   <el-table-column fixed="right" label="操作" min-width="22%">
@@ -469,10 +491,20 @@
 import request from "@/utils/request";
 import { useRouter } from "vue-router/dist/vue-router";
 import { ElLoading } from "element-plus";
-import { Plus, Search, DataAnalysis, ArrowRight, Edit, Delete, View } from '@element-plus/icons-vue';
+import { Plus, Search, DataAnalysis, ArrowRight, Edit, Delete, View, Grid } from '@element-plus/icons-vue';
 
 export default {
   name: "DataScreen",
+  components: {
+    Plus,
+    Search,
+    DataAnalysis,
+    ArrowRight,
+    Edit,
+    Delete,
+    View,
+    Grid
+  },
   data() {
     return {
       tagList: [],
@@ -1551,4 +1583,149 @@ export default {
   background-color: rgba(245, 108, 108, 0.1);
   border-color: #f89898;
 }
+/* 展开区域样式优化 */
+:deep(.el-table__expand-icon) {
+  /* 增大展开图标 */
+  transform: scale(1.2);
+  margin-right: 10px;
+  transition: all 0.3s ease;
+}
+
+:deep(.el-table__expand-icon .el-icon) {
+  color: #4c75a3; /* 使用与头部一致的蓝色 */
+  font-weight: bold;
+  font-size: 16px;
+}
+
+/* 展开图标动画效果 */
+:deep(.el-table__expand-icon--expanded) {
+  transform: rotate(90deg) scale(1.2);
+}
+
+/* 鼠标悬浮在行上时的展开图标效果 */
+:deep(.el-table__row:hover .el-table__expand-icon .el-icon) {
+  color: #1a2942;
+  transform: scale(1.1);
+}
+
+/* 展开内容区域样式 */
+:deep(.el-table__expanded-cell) {
+  background: linear-gradient(to right, #f0f5fa, #e6edf5) !important;
+  padding: 25px 20px !important;
+  border-radius: 0 0 8px 8px;
+  border-bottom: 1px solid #d0d8e6 !important;
+  box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.05);
+  position: relative;
+}
+
+/* 添加展开区域内表格标题 */
+.expanded-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding: 0 10px;
+}
+
+.expanded-table-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a2942;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 可展开行的视觉提示 */
+:deep(.el-table__row-is-expand-row-expandable) {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+:deep(.el-table__row-is-expand-row-expandable:hover) {
+  background-color: rgba(76, 117, 163, 0.05) !important;
+}
+
+/* 展开后的子表格样式 */
+.expanded-table {
+  margin-left: 0 !important; /* 移除原来的左边距 */
+  width: 100% !important; /* 使用全宽 */
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #ebeef5;
+}
+
+
+/* 修改数据集行样式，使其更加醒目 */
+:deep(.data-table .el-table__row) {
+  background-color: #f8fafd !important;
+  border-left: 4px solid #4c75a3;
+  height: 60px !important;
+}
+
+:deep(.data-table .el-table__row:hover) {
+  background-color: #edf2f9 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(76, 117, 163, 0.12);
+}
+
+/* 使数据集名称更加醒目 */
+:deep(.data-table .el-table__row .cell) {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+/* 数据集名称特别突出 */
+:deep(.data-table .el-table__row td:nth-child(5) .cell) {
+  font-weight: 600;
+  font-size: 15px;
+  color: #1a2942;
+}
+
+/* 添加数据集标识图标 */
+:deep(.data-table .el-table__row .el-table__expand-icon) {
+  position: relative;
+}
+
+:deep(.data-table .el-table__row .el-table__expand-icon::after) {
+  content: '';
+  position: absolute;
+  right: -25px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #4c75a3;
+  box-shadow: 0 0 0 2px rgba(76, 117, 163, 0.2);
+}
+
+/* 行间距和分隔 */
+:deep(.data-table .el-table__row) {
+  margin-bottom: 8px;
+  border-bottom: 1px solid #ebeef5;
+}
+
+/* 展开时的样式区分 */
+:deep(.el-table__expanded-row) {
+  background: transparent !important;
+}
+
+:deep(.el-table__expanded-row .expanded-table-header) {
+  margin-top: 5px;
+}
+
+/* 增加展开表格与数据集之间的视觉区分 */
+.expanded-table {
+  margin-top: 10px !important;
+  margin-bottom: 10px !important;
+}
+
+/* 确保展开区域不会太突兀 */
+:deep(.el-table__expanded-cell) {
+  padding: 20px 30px 30px !important;
+}
+
+
 </style>
