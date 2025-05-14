@@ -3430,13 +3430,14 @@ export default {
 </script>
 
 <style scoped>
-/deep/ .input-a input::-webkit-outer-spin-button,
-/deep/ .input-a input::-webkit-inner-spin-button {
+:deep(.input-a input::-webkit-outer-spin-button),
+:deep(.input-a input::-webkit-inner-spin-button) {
   -webkit-appearance: none;
 }
 
-/deep/ .input-a input[type="number"] {
+:deep(.input-a input[type="number"]) {
   -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 .input {

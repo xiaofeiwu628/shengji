@@ -1,41 +1,77 @@
 <template>
-  <div>
-    <div style="margin: 20px 0 0 2%">
+  <div class="dataset-management">
+    <!-- 顶部导航区域 -->
+    <div class="header-area">
       <el-breadcrumb :separator-icon="ArrowRight">
-        <el-breadcrumb-item>数据集管理</el-breadcrumb-item>
+        <el-breadcrumb-item class="tech-title">
+          <el-icon><DataAnalysis /></el-icon>
+          数据集管理
+        </el-breadcrumb-item>
       </el-breadcrumb>
-    </div>
-    <div style="background-color: white; margin: 20px; min-height: calc(100vh - 140px)">
-      <!--  数据总览界面-->
-      <div v-show="screenVisable === 1">
-        <!--搜索区域-->
-        <div style="padding: 20px 30px; display: flex">
-          <el-button type="primary" @click="createDataset">创建数据集</el-button>
-          <div style="display: inline-block; flex: 1"></div>
-          <el-select v-model="dataSwitch" @change="load">
-            <el-option label="显示用户数据集" :value="0"></el-option>
-            <el-option label="显示公有数据集" :value="1"></el-option>
-            <el-option label="显示全部数据集" :value="2"></el-option>
-          </el-select>
-          <el-input
-            v-model="search"
-            placeholder="请输入关键字"
-            style="width: 200px; margin-left: 20px"
-            @keyup.enter="load"
-            clearable
-            @clear="load"
-          />
-          <el-button type="primary" style="margin: 0 20px 0 20px" @click="load">查询</el-button>
+      
+      <!-- 数据集概览卡片 -->
+      <div class="data-metrics">
+        <div class="metric-card">
+          <div class="metric-value">{{tableData.length}}</div>
+          <div class="metric-label">数据集总数</div>
         </div>
+        <div class="metric-card">
+          <div class="metric-value">{{getTotalTables()}}</div>
+          <div class="metric-label">数据表总数</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-panel">
+      <!-- 数据总览界面 -->
+      <div v-show="screenVisable === 1">
+        <!-- 搜索区域 -->
+        <div class="search-container">
+          <div class="left-area">
+            <el-button type="primary" class="create-btn" @click="createDataset">
+              <el-icon><Plus /></el-icon>创建数据集
+            </el-button>
+          </div>
+          
+          <div class="right-area">
+            <el-select 
+              v-model="dataSwitch" 
+              @change="load"
+              placeholder="数据集类型"
+              class="tech-select">
+              <el-option label="显示用户数据集" :value="0"></el-option>
+              <el-option label="显示公有数据集" :value="1"></el-option>
+              <el-option label="显示全部数据集" :value="2"></el-option>
+            </el-select>
+            
+            <el-input
+              v-model="search"
+              placeholder="请输入关键字搜索"
+              clearable
+              @keyup.enter="load"
+              @clear="load"
+              class="tech-input">
+              <template #prefix>
+                <el-icon><Search /></el-icon>
+              </template>
+            </el-input>
+            
+            <el-button type="primary" class="search-btn" @click="load">
+              <el-icon><Search /></el-icon>查询
+            </el-button>
+          </div>
+        </div>
+
         <!--数据展示区域-->
-        <div style="margin: 0 2% 0 2%">
+        <div class="table-container">
           <el-table
             :data="tableData"
-            style="width: 100%; height: 67vh"
+            class="data-table"
             border
             stripe
             :cell-style="{ 'text-align': 'center' }"
-            :header-cell-style="{ 'text-align': 'center', background: '#F5F5F5' }"
+            :header-cell-style="{ 'text-align': 'center', background: '#1a2942', color: '#fff' }"
+            style="width: 100%"
           >
             <el-table-column type="expand">
               <template v-slot="slot">
@@ -46,21 +82,40 @@
                   <el-table-column prop="col_num" label="列数" min-width="13%" />
                   <el-table-column prop="table_type" label="类型" min-width="13%" />
                   <el-table-column prop="table_desc" label="描述" min-width="13%" />
+                  <!-- 数据表扩展区操作按钮 -->
                   <el-table-column fixed="right" label="操作" min-width="22%">
                     <template #default="scope">
-                      <el-button
-                        link
-                        type="primary"
-                        size="small"
-                        @click="handleDetail(scope.row.set_id, scope.row.table_id, scope.row.table_type, scope.row.table_name)"
-                        >查看
-                      </el-button>
-                      <el-button link type="primary" size="small" @click="tableUpdate(scope.row)">修改</el-button>
-                      <el-popconfirm title="确认删除吗？" @confirm="tableDelete(scope.row)">
-                        <template #reference>
-                          <el-button type="text" size="small">删除</el-button>
-                        </template>
-                      </el-popconfirm>
+                      <div class="action-buttons">
+                        <el-button
+                          class="action-btn view-btn"
+                          link
+                          type="primary"
+                          size="small"
+                          @click="handleDetail(scope.row.set_id, scope.row.table_id, scope.row.table_type, scope.row.table_name)"
+                        >
+                          <el-icon><View /></el-icon>查看
+                        </el-button>
+                        <el-button 
+                          class="action-btn edit-btn" 
+                          link
+                          type="primary" 
+                          size="small" 
+                          @click="tableUpdate(scope.row)"
+                        >
+                          <el-icon><Edit /></el-icon>修改
+                        </el-button>
+                        <el-popconfirm title="确认删除吗？" @confirm="tableDelete(scope.row)">
+                          <template #reference>
+                            <el-button 
+                              class="action-btn delete-btn" 
+                              type="text" 
+                              size="small"
+                            >
+                              <el-icon><Delete /></el-icon>删除
+                            </el-button>
+                          </template>
+                        </el-popconfirm>
+                      </div>
                     </template>
                   </el-table-column>
                 </el-table>
@@ -71,13 +126,13 @@
               label="数据集ID"
               sortable
               :resizable="false"
-              min-width="110"
+              min-width="90"
               show-overflow-tooltip
             />
             <el-table-column
               prop="username"
               label="拥有者"
-              min-width="110"
+              min-width="80"
               sortable
               :resizable="false"
               show-overflow-tooltip
@@ -97,15 +152,35 @@
             <el-table-column prop="is_public" label="是否公开" :formatter="publicFormat" />
             <el-table-column prop="set_name" label="数据集名称" show-overflow-tooltip />
             <el-table-column prop="set_desc" label="备注" show-overflow-tooltip />
-            <el-table-column prop="table_num" label="数据表数量" />
-            <el-table-column fixed="right" width="180" label="操作">
+            <el-table-column prop="table_num" label="数据表数量" min-width="70" />
+            <!-- 数据集操作按钮 -->
+            <el-table-column fixed="right"  label="操作" min-width="150">
               <template #default="scope">
-                <div style="display: flex">
-                  <el-button link type="primary" size="small" @click="handleAdd(scope.row)">新增数据表</el-button>
-                  <el-button link type="primary" size="small" @click="datasetUpdate(scope.row)">修改</el-button>
+                <div class="action-buttons">
+                  <el-button 
+                    class="action-btn add-btn" 
+                    link 
+                    size="small" 
+                    @click="handleAdd(scope.row)"
+                  >
+                    <el-icon><Plus /></el-icon>新增数据表
+                  </el-button>
+                  <el-button 
+                    class="action-btn edit-btn" 
+                    link 
+                    size="small" 
+                    @click="datasetUpdate(scope.row)"
+                  >
+                    <el-icon><Edit /></el-icon>修改
+                  </el-button>
                   <el-popconfirm title="确认删除吗？" @confirm="handleDelete(scope.row)">
                     <template #reference>
-                      <el-button type="text" size="small">删除</el-button>
+                      <el-button 
+                        class="action-btn delete-btn" 
+                        size="small"
+                      >
+                        <el-icon><Delete /></el-icon>删除
+                      </el-button>
                     </template>
                   </el-popconfirm>
                 </div>
@@ -394,6 +469,7 @@
 import request from "@/utils/request";
 import { useRouter } from "vue-router/dist/vue-router";
 import { ElLoading } from "element-plus";
+import { Plus, Search, DataAnalysis, ArrowRight, Edit, Delete, View } from '@element-plus/icons-vue';
 
 export default {
   name: "DataScreen",
@@ -535,6 +611,15 @@ export default {
     };
   },
   methods: {
+
+    //
+    getTotalTables() {//获取数据表总数
+      let count = 0;
+      this.tableData.forEach(dataset => {
+        count += dataset.table_num || 0;
+      });
+      return count;
+    },
     //加载动画控制
     openFullScreen1() {
       this.loading1 = ElLoading.service({
@@ -1219,8 +1304,251 @@ export default {
   },
 };
 </script>
+
 <style scoped>
-/*.el-table :deep(.el-table__cell) {*/
-/*  background-color: #ffffff;*/
-/*}*/
+.dataset-management {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.header-area {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 30px;
+  background: linear-gradient(to right, #4c75a3, #4c75a3); /* 更浅的蓝色渐变 */
+  border-radius: 8px;
+  color: white;
+  margin: 20px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.tech-title {
+  font-size: 24px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.2);
+  color: #ffffff !important; /* 添加!important确保优先级 */
+}
+
+/* 为了解决可能存在的嵌套元素问题 */
+:deep(.tech-title span),
+:deep(.tech-title div),
+:deep(.tech-title a) {
+  color: #ffffff !important;
+}
+
+/* 保持图标为白色 */
+.tech-title .el-icon {
+  font-size: 28px;
+  color: #ffffff;
+}
+
+.data-metrics {
+  display: flex;
+  gap: 20px;
+}
+
+.metric-card {
+  background: rgba(255, 255, 255, 0.18); /* 略微增加透明度 */
+  border-radius: 8px;
+  padding: 10px 20px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12); /* 添加阴影增加层次感 */
+}
+
+.metric-card:hover {
+  transform: translateY(-3px);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.metric-value {
+  font-size: 26px;
+  font-weight: 600;
+}
+
+.metric-label {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.content-panel {
+  background-color: white;
+  margin: 0 20px 20px;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  min-height: calc(100vh - 210px);
+}
+
+.search-container {
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(to right, #f6f8fa, #e9ecef);
+  border-radius: 8px;
+  margin-bottom: 25px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+}
+
+.right-area {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.tech-input {
+  width: 360px;
+  border-radius: 6px;
+  transition: all 0.3s;
+}
+
+.tech-input:focus-within {
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.tech-select {
+  border-radius: 6px;
+  min-width: 150px;
+}
+
+.create-btn, .search-btn {
+  background: linear-gradient(to right, #1a2942, #2a476e);
+  border: none;
+  border-radius: 6px;
+  transition: all 0.3s;
+}
+
+.create-btn:hover, .search-btn:hover {
+  background: linear-gradient(to right, #2a476e, #1a2942);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 15px rgba(26, 41, 66, 0.2);
+}
+
+.table-container {
+  margin: 0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tech-table {
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+}
+
+:deep(.el-table__row) {
+  transition: all 0.2s;
+}
+
+:deep(.el-table__row:hover) {
+  background-color: #f0f8ff !important;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.03);
+}
+
+:deep(.el-button.is-link) {
+  color: #1a2942;
+}
+
+:deep(.el-button.is-text) {
+  color: #ff4757;
+}
+
+/* 优化扩展行的样式 */
+:deep(.el-table__expand-icon) {
+  color: #1a2942;
+}
+
+:deep(.el-table__expanded-cell) {
+  background: linear-gradient(to right, #f7f9fc, #f1f3f8);
+  padding: 20px !important;
+}
+
+/* 优化标签样式 */
+:deep(.el-tag) {
+  border-radius: 4px;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+:deep(.el-tag--success) {
+  background-color: rgba(82, 196, 26, 0.1);
+  border-color: rgba(82, 196, 26, 0.2);
+  color: #52c41a;
+}
+/* 操作按钮容器样式 */
+.action-buttons {
+  display: flex;
+  gap: 8px; /* 将间距从之前的值减小到8px */
+  justify-content: center;
+}
+
+/* 通用按钮样式 */
+.action-btn {
+  padding: 4px 8px; /* 稍微减小按钮的内边距 */
+  border-radius: 4px;
+  font-weight: 500;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 60px; /* 稍微减小按钮的最小宽度 */
+}
+
+/* 查看按钮样式 */
+.view-btn {
+  color: #1a2942 !important;
+}
+
+.view-btn:hover {
+  color: #4c75a3 !important;
+  background-color: rgba(76, 117, 163, 0.05);
+}
+
+/* 新增按钮样式 */
+.add-btn {
+  color: #303133 !important;
+  border: 1px solid #dcdfe6;
+  background-color: #ffffff;
+}
+
+.add-btn:hover {
+  color: #000000 !important;
+  background-color: #f5f7fa;
+  border-color: #c0c4cc;
+}
+
+/* 修改按钮样式 */
+.edit-btn {
+  color: #409EFF !important;
+  border: 1px solid #c6e2ff;
+  background-color: rgba(64, 158, 255, 0.05);
+}
+
+.edit-btn:hover {
+  color: #066de7 !important;
+  background-color: rgba(64, 158, 255, 0.1);
+  border-color: #a0cfff;
+}
+
+/* 删除按钮样式 */
+.delete-btn {
+  color: #F56C6C !important;
+  border: 1px solid #fbc4c4;
+  background-color: rgba(245, 108, 108, 0.05);
+}
+
+.delete-btn:hover {
+  color: #e22c2c !important;
+  background-color: rgba(245, 108, 108, 0.1);
+  border-color: #f89898;
+}
 </style>
