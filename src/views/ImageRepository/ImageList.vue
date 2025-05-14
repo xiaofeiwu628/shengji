@@ -1,417 +1,536 @@
 <template>
-<div>
-  <div style="margin: 20px 0 0 2%">
-    <el-breadcrumb :separator-icon="ArrowRight">
-      <el-breadcrumb-item v-if="pageIndex === 1">我的镜像</el-breadcrumb-item>
-      <el-breadcrumb-item v-if="pageIndex === 2">公开镜像</el-breadcrumb-item>
-    </el-breadcrumb>
-  </div>
-  <div style="padding: 20px 20px 0 20px;">
-    <el-menu class="el-menu-m" mode="horizontal" default-active="1">
-      <el-menu-item index="1" @click="changePageIndex(1)">我的镜像</el-menu-item>
-      <el-menu-item index="2" @click="changePageIndex(2)" >公开镜像</el-menu-item>
-    </el-menu>
-  </div>
-  <div style="background-color: white;margin: 20px;min-height: calc(100vh - 203px)">
-<!--    我的镜像-->
-    <div v-if="pageIndex === 1">
-<!--      <div style="text-align: right;padding: 20px 2% 0 0;width: 100%">-->
-<!--        <el-icon size="20px" @click="loadMyImage" style="cursor: pointer"><Refresh /></el-icon>-->
-<!--      </div>-->
-      <!--    导入、搜索查询-->
-      <div style="display:flex;padding:40px 2% 0 2%">
-        <el-button  type="primary" style="width: 80px" @click="openImageImportDialog">镜像创建</el-button>
-        <div style="display: inline-block;flex: 1"></div>
-<!--        <el-select v-model="imageState" class="m-2" style="width: 250px" @change="selectByImageState">-->
-<!--          <el-option-->
-<!--              v-for="item in imageStateList"-->
-<!--              :key="item.value"-->
-<!--              :label="item.label"-->
-<!--              :value="item.value"-->
-<!--          />-->
-<!--        </el-select>-->
-        <div style="display: inline-block;margin-left: 10px;line-height: 32px">
-          <el-icon size="20px" @click="loadMyImage" style="cursor: pointer;vertical-align: middle;"><Refresh /></el-icon>
+  <div class="image-repository">
+    <!-- 顶部导航区域 -->
+    <div class="header-area">
+      <el-breadcrumb :separator-icon="ArrowRight">
+        <el-breadcrumb-item class="tech-title">
+          <el-icon><Picture /></el-icon>
+          {{ pageIndex === 1 ? '我的镜像' : '公开镜像' }}
+        </el-breadcrumb-item>
+      </el-breadcrumb>
+      
+      <!-- 镜像概览卡片 -->
+      <div class="image-metrics" v-if="pageIndex === 1">
+        <div class="metric-card">
+          <div class="metric-value">{{myImageData.length}}</div>
+          <div class="metric-label">我的镜像总数</div>
         </div>
-        <el-input
-            v-model="selectInputByImageName"
-            class="w-50 m-2"
-            clearable
-            style="width: 250px;margin-left: 30px"
-            placeholder="输入镜像名称查询"
-            @clear="loadMyImage"
-        />
-        <el-button  type="primary" style="margin-left: 10px" @click="selectByImageName">查询</el-button>
+        <div class="metric-card">
+          <div class="metric-value">{{getTotalVersions(myImageData)}}</div>
+          <div class="metric-label">镜像版本总数</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-value">{{getUsedImageVersions(myImageData)}}</div>
+          <div class="metric-label">使用中版本</div>
+        </div>
       </div>
-      <!--        我的镜像列表-->
-      <div>
-        <el-table :data="myImageData" border stripe style="width: 96%;margin: 20px 0 40px 2%" v-loading="myImageLoading" :row-style="{height:'65px'}">
-          <el-table-column type="expand" min-width="3%">
-            <template v-slot="slot">
-              <el-table :data="slot.row.image_version" style="width: 80%;margin: 0 auto" border stripe>
-                <el-table-column prop="tag" label="版本号" min-width="15%" align="center"/>
-                <el-table-column prop="image_version_id" label="版本ID" min-width="15%" align="center"/>
-                <el-table-column prop="version_desc" label="描述" min-width="15%" align="center"/>
-<!--                <el-table-column prop="version_state" label="状态" min-width="13%" align="center"/>-->
-                <el-table-column prop="is_used" label="是否使用" min-width="15%" align="center">
-                  <template #default="scope">
-                    <el-link :underline="false" type="primary" @click="openServiceDialog(scope.row)" v-if="scope.row.is_used === 1">{{ imageStateDic[scope.row.is_used] }}</el-link>
-                    <span v-if="scope.row.is_used === 0">{{ imageStateDic[scope.row.is_used] }}</span>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="create_time" label="导入时间" min-width="18%" align="center"/>
-                <el-table-column  label="操作" min-width="22%" >
-                  <template #default="scope">
+      
+      <div class="image-metrics" v-if="pageIndex === 2">
+        <div class="metric-card">
+          <div class="metric-value">{{publicImageData.length}}</div>
+          <div class="metric-label">公开镜像总数</div>
+        </div>
+      </div>
+    </div>
 
-                    <el-dropdown class="myModelButton">
-                    <span class="el-dropdown-link">
-                      部署
-                      <el-icon class="el-icon--right">  <ArrowDown />  </el-icon>
-                    </span>
-                      <template #dropdown>
-                        <el-dropdown-menu>
-                          <el-dropdown-item @click="createOnlineService(slot.row,scope.row)">在线服务</el-dropdown-item>
-                          <!--                          <el-dropdown-item>离线服务</el-dropdown-item>-->
-                        </el-dropdown-menu>
-                      </template>
-                    </el-dropdown>
-<!--                    <el-button link type="primary" class="myModelButton" @click="openModifyImageDialog(scope.row)" >修改</el-button>-->
-                    <el-popconfirm title="确定删除吗？" @confirm="versionDeleteMethod(scope.row,slot.row)">
-                      <template #reference>
-                        <el-button link type="primary" class="myModelButton">删除</el-button>
-                      </template>
-                    </el-popconfirm>
-
-                  </template>
-                </el-table-column>
-              </el-table>
-            </template>
-          </el-table-column>
-          <el-table-column prop="image_name" label="镜像名称" sortable min-width="12%" align="center"/>
-          <el-table-column prop="image_id" label="镜像ID" min-width="12%" align="center"/>
-          <el-table-column prop="image_desc" label="描述" min-width="12%" align="center"/>
-          <el-table-column prop="is_public" label="是否公开" :formatter="publicFormat" min-width="12%" align="center">
-            <template #default="scope">
-              {{scope.row.is_public === 0 ? '不公开' : '公开'}}
-            </template>
-          </el-table-column>
-          <el-table-column prop="version_num" label="版本数量" min-width="12%" align="center"/>
-          <el-table-column prop="create_time" label="创建时间" min-width="12%" align="center"/>
-          <el-table-column  label="操作" min-width="25%" >
-            <template #default="scope">
-              <el-button link type="primary" size="small" @click="addVersion(scope.row)">新增版本</el-button>
-              <el-button link type="primary" size="small" @click="openModifyVersionDialog(scope.row)">修改</el-button>
-<!--              <el-popconfirm title="确认删除吗？" @confirm="imageDeleteMethod(scope.row)">-->
-<!--                <template #reference>-->
-              <el-button link type="primary" size="small" @click="openImageDeleteDialog(scope.row)">删除</el-button>
-<!--                </template>-->
-<!--              </el-popconfirm>-->
-            </template>
-          </el-table-column>
-        </el-table>
-      </div>
-      <!--    镜像信息修改对话框-->
-      <div>
-        <el-dialog v-model="modifyMyImageDialog" title="镜像修改" width="500px">
-          <el-form
-              label-position="left"
-              label-width="100px"
-              :model="formOfModifyMyImage"
-              style="max-width: 420px;margin-left: 10px"
-          >
-            <el-form-item label="镜像名称">
-              <el-input v-model="formOfModifyMyImage.imageName" disabled />
-            </el-form-item>
-            <el-form-item label="镜像描述">
-              <el-input type="textarea" v-model="formOfModifyMyImage.imageDesc" />
-            </el-form-item>
-            <el-form-item label="是否公开">
-              <el-radio-group v-model="formOfModifyMyImage.isPublic" style="margin-left: 10px" >
-                <el-radio label="不公开" />
-                <el-radio label="公开" />
-              </el-radio-group>
-            </el-form-item>
-          </el-form>
-          <template #footer>
-              <span>
-                <el-button @click="this.modifyMyImageDialog = false">取消</el-button>
-                <el-button type="primary" @click="modifyMyImage">确定</el-button>
-              </span>
-          </template>
-        </el-dialog>
-      </div>
-<!--      镜像创建-->
-      <div>
-        <el-dialog v-model="importMyImageInfoDialog" title="镜像创建" width="30%">
-          <el-form
-              label-position="right"
-              label-width="100px"
-              :model="formOfImageInfoImport"
-              style="max-width: 420px;margin-left: 10px"
-              :rules="rules"
-              ref="imageImportRef"
-          >
-            <el-form-item label="镜像名称" prop="imageName">
-              <el-input v-model="formOfImageInfoImport.imageName" />
-            </el-form-item>
-            <el-form-item label="镜像描述">
-              <el-input type="textarea" placeholder="请输入镜像描述，100字以内" maxlength="100" rows="4" v-model="formOfImageInfoImport.imageDesc" />
-            </el-form-item>
-            <el-form-item label="是否公开">
-              <el-radio-group v-model="formOfImageInfoImport.isPublic" style="margin-left: 10px" >
-                <el-radio label="不公开" />
-                <el-radio label="公开" />
-              </el-radio-group>
-            </el-form-item>
-          </el-form>
-          <template #footer>
-              <span>
-                <el-button @click="this.importMyImageInfoDialog = false">取消</el-button>
-                <el-button type="primary" @click="importMyImageInfo">确定</el-button>
-              </span>
-          </template>
-        </el-dialog>
+    <div class="content-panel">
+      <!-- 页面导航栏 -->
+      <div class="tab-container">
+        <el-menu class="el-menu-m" mode="horizontal" :default-active="pageIndex.toString()">
+          <el-menu-item index="1" @click="changePageIndex(1)">我的镜像</el-menu-item>
+          <el-menu-item index="2" @click="changePageIndex(2)">公开镜像</el-menu-item>
+        </el-menu>
       </div>
 
-
-      <!--      新增镜像版本-->
-      <div>
-        <el-dialog v-model="importMyImageVersionDialog" title="新增版本" width="30%">
-          <el-form
-              label-position="right"
-              label-width="100px"
-              :model="formOfImageVersionImport"
-              style="max-width: 420px;margin-left: 10px"
-              :rules="rules"
-              ref="imageVersionImportRef"
-          >
-            <el-form-item label="版本号" prop="tag">
-              <el-input v-model="formOfImageVersionImport.tag" placeholder="e.g:1.0"/>
-            </el-form-item>
-            <el-form-item label="描述">
-              <el-input type="textarea" placeholder="请输入镜像版本的描述，100字以内" maxlength="100" rows="4" v-model="formOfImageVersionImport.imageVersionDesc" />
-            </el-form-item>
-            <el-form-item label="上传文件">
-              <el-button @click="uploadFileDialog = true">点击上传</el-button>
-            </el-form-item>
-          </el-form>
-          <template #footer>
-              <span>
-                <el-button @click="this.importMyImageVersionDialog = false">取消</el-button>
-                <el-button type="primary" @click="importMyImageVersion">确定</el-button>
-              </span>
-          </template>
-<!--          上传文件窗口-->
-          <el-dialog v-model="uploadFileDialog" title="文件上传" width="35%">
-            <el-upload
-                class="upload-demo"
-                drag
-                action=""
-                :on-change="importFile"
-                :auto-upload="false"
-                :limit="1"
-                :before-upload="beforeUploadFile"
-                ref="uploadRef"
-            >
-              <el-icon class="el-icon--upload"><upload-filled /></el-icon>
-              <div class="el-upload__text">
-                将文件拖到此处，或<em>点击上传</em>
-              </div>
-              <template #tip>
-                <div class="el-upload__tip">
-                  请上传镜像文件的压缩包
-                </div>
-              </template>
-            </el-upload>
-            <template #footer>
-              <span>
-                <el-button @click="importFileCancel">取消</el-button>
-                <el-button type="primary" @click="this.uploadFileDialog = false">确定</el-button>
-              </span>
-            </template>
-          </el-dialog>
-        </el-dialog>
-      </div>
-
-<!--      上传中-弹出框-->
-      <div>
-        <el-dialog
-            v-model="uploadingDialog"
-            title=""
-            :show-close="false"
-            width="21%"
-            style="text-align: center;padding: 0"
-            :close-on-click-modal="false"
-            :close-on-press-escape="false">
-          <div style="display: flex;line-height:180px;height: 180px;margin: 0 0 10px 10px">
-            <div style="display: inline-block;vertical-align:middle;">
-              <el-progress type="dashboard" :percentage="completionDic[identifier]" style="vertical-align: middle">
-                <template #default="{ percentage }">
-                  <span class="percentage-value">{{ percentage }}%</span>
-                  <span class="percentage-label" v-if="uploadingFlag">上传中</span>
+      <!--我的镜像-->
+      <div v-if="pageIndex === 1">
+        <div class="action-bar">
+            <div class="left-area">
+              <el-button type="primary" @click="openImageImportDialog" class="create-btn">
+                <el-icon><Plus /></el-icon>
+                镜像创建
+              </el-button>
+            </div>
+          
+          <div class="middle-area">
+            <!-- 可以添加筛选功能 -->
+          </div>
+          
+          <div class="right-area">
+            <div class="search-box">
+              <el-input
+                v-model="selectInputByImageName"
+                placeholder="输入镜像名称查询"
+                class="search-input"
+                clearable
+                @clear="loadMyImage"
+                @keyup.enter="selectByImageName"
+              >
+                <template #prefix>
+                  <el-icon><Search /></el-icon>
                 </template>
-              </el-progress>
+                <template #append>
+                  <el-button @click="selectByImageName">
+                    <el-icon><Search /></el-icon>
+                  </el-button>
+                </template>
+              </el-input>
             </div>
-            <div style="display: inline-block;height: 100%;line-height: 100%;vertical-align: middle;margin: 0 0 0 10px;">
-              <div style="display:flex;
-                justify-content: center;
-                white-space: pre-line;
-                text-align: left;
-                vertical-align: top;
-                padding:0;
-                line-height: 120%">
-                {{uploadMessage}}
-              </div>
-            </div>
+            
+            <el-button 
+              class="refresh-btn" 
+              @click="loadMyImage" 
+              :loading="myImageLoading"
+              type="primary"
+              plain>
+              <el-icon class="refresh-icon" :class="{ 'is-loading': myImageLoading }"><Refresh /></el-icon>
+              刷新列表
+            </el-button>
           </div>
-          <div>
-            <el-button v-if="!closeFlag" @click="cancelUpload">取消上传</el-button>
-            <el-button v-if="closeFlag" @click="this.uploadingDialog = false">关闭</el-button>
-          </div>
-        </el-dialog>
-      </div>
-<!--      镜像对应服务的列表-->
-      <div>
-        <el-dialog v-model="imageServiceDialog" title="在线服务列表" min-width="500px">
-          <el-table :data="imageServiceData" border :header-cell-style="{background:'#F5F5F5'}" v-loading="imageServiceLoading">
-            <el-table-column property="service_name" label="服务名称" min-width="35%" align="center"/>
-            <el-table-column property="service_id" label="服务ID" min-width="35%" align="center">
-              <template #default="scope">
-                <el-link :underline="false" type="primary" @click="toServicePage(scope.row)">{{ scope.row.service_id }}</el-link>
+        </div>
+
+        <!--我的镜像列表-->
+        <div class="table-container">
+          <el-table 
+            :data="myImageData" 
+            border 
+            v-loading="myImageLoading" 
+            :row-style="{ height: '65px' }"
+            :cell-style="{ 'text-align': 'center' }"
+            :header-cell-style="{ 'text-align': 'center', background: '#1a2942', color: '#fff' }"
+            class="image-table"
+          >
+            <el-table-column type="expand" min-width="3%">
+              <template #default="slot">
+                <el-table 
+                  :data="slot.row.image_version" 
+                  style="width: 90%; margin: 15px auto" 
+                  border 
+                  :header-cell-style="{ 'text-align': 'center', background: '#f5f7fa', color: '#606266' }"
+                  :cell-style="{ 'text-align': 'center' }"
+                  class="version-table"
+                >
+                  <el-table-column prop="tag" label="版本号" min-width="15%" align="center"/>
+                  <el-table-column prop="image_version_id" label="版本ID" min-width="15%" align="center"/>
+                  <el-table-column prop="version_desc" label="描述" min-width="15%" align="center"/>
+                  <el-table-column prop="is_used" label="是否使用" min-width="15%" align="center">
+                    <template #default="scope">
+                      <el-link :underline="false" type="primary" @click="openServiceDialog(scope.row)" v-if="scope.row.is_used === 1">{{ imageStateDic[scope.row.is_used] }}</el-link>
+                      <el-tag type="info" effect="plain" v-if="scope.row.is_used === 0">{{ imageStateDic[scope.row.is_used] }}</el-tag>
+                    </template>
+                  </el-table-column>
+                  <el-table-column prop="create_time" label="导入时间" min-width="18%" align="center"/>
+                  <el-table-column label="操作" min-width="22%">
+                    <template #default="scope">
+                      <div class="action-buttons">
+                        <el-dropdown class="action-dropdown">
+                          <span class="el-dropdown-link">
+                            部署 <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+                          </span>
+                          <template #dropdown>
+                            <el-dropdown-menu>
+                              <el-dropdown-item @click="createOnlineService(slot.row,scope.row)">在线服务</el-dropdown-item>
+                            </el-dropdown-menu>
+                          </template>
+                        </el-dropdown>
+                        
+                        <el-popconfirm title="确定删除吗？" @confirm="versionDeleteMethod(scope.row,slot.row)">
+                          <template #reference>
+                            <el-button link type="primary" class="action-button">删除</el-button>
+                          </template>
+                        </el-popconfirm>
+                      </div>
+                    </template>
+                  </el-table-column>
+                </el-table>
               </template>
             </el-table-column>
-            <el-table-column property="service_state" label="状态" min-width="30%" align="center">
+            <el-table-column prop="image_name" label="镜像名称" sortable min-width="12%" align="center"/>
+            <el-table-column prop="image_id" label="镜像ID" min-width="12%" align="center"/>
+            <el-table-column prop="image_desc" label="描述" min-width="12%" align="center"/>
+            <el-table-column prop="is_public" label="是否公开" min-width="12%" align="center">
               <template #default="scope">
-                <el-tag :style="setStateStyle(scope.row.service_state)" round >{{ serviceStateDic[scope.row.service_state]}}</el-tag>
+                <el-tag 
+                  :type="scope.row.is_public === 0 ? 'info' : 'success'"
+                  effect="light"
+                  round
+                >
+                  {{scope.row.is_public === 0 ? '不公开' : '公开'}}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="version_num" label="版本数量" min-width="12%" align="center"/>
+            <el-table-column prop="create_time" label="创建时间" min-width="12%" align="center"/>
+            <el-table-column label="操作" min-width="25%">
+              <template #default="scope">
+                <div class="action-buttons">
+                  <el-button 
+                    type="primary" 
+                    size="small" 
+                    @click="addVersion(scope.row)"
+                    class="action-btn"
+                    round>新增版本</el-button>
+                  <el-button 
+                    type="primary" 
+                    size="small" 
+                    @click="openModifyVersionDialog(scope.row)"
+                    class="action-btn"
+                    round>修改</el-button>
+                  <el-button 
+                    type="danger" 
+                    size="small" 
+                    @click="openImageDeleteDialog(scope.row)"
+                    class="action-btn"
+                    round>删除</el-button>
+                </div>
               </template>
             </el-table-column>
           </el-table>
-          <template #footer>
-          <span>
-            <el-button @click="this.imageServiceDialog = false">确定</el-button>
-          </span>
-          </template>
-        </el-dialog>
+        </div>
       </div>
-      <!--    镜像整体删除的提示弹出框-->
-      <div>
-        <el-dialog v-model="imageDeleteDialog"  width="400px">
-          <template #header>
-            <div style="display: flex;">
-              <div style="display:inline-block;line-height: 20px">
-                <el-icon size="20px" style="vertical-align: middle"><WarningFilled /></el-icon>
-              </div>
-              <span style="display: inline-block;vertical-align: middle;line-height: 20px;margin-left: 5px;font-size: 18px;color: red">提示</span>
+
+      <!--公开镜像-->
+      <div v-if="pageIndex === 2">
+        <div class="action-bar">
+          <div class="left-area">
+            <el-button 
+              class="refresh-btn" 
+              @click="loadPublicImage({is_public:1})" 
+              :loading="publicImageLoading"
+              type="primary"
+              plain>
+              <el-icon class="refresh-icon" :class="{ 'is-loading': publicImageLoading }"><Refresh /></el-icon>
+              刷新列表
+            </el-button>
+          </div>
+          
+          <div class="middle-area">
+            <!-- 可以添加筛选功能 -->
+          </div>
+          
+          <div class="right-area">
+            <div class="search-box">
+              <el-input
+                v-model="selectInputByPublicImageName"
+                placeholder="输入镜像名称查询"
+                class="search-input"
+                clearable
+                @clear="loadPublicImage"
+                @keyup.enter="selectByPublicImageName"
+              >
+                <template #prefix>
+                  <el-icon><Search /></el-icon>
+                </template>
+                <template #append>
+                  <el-button @click="selectByPublicImageName">
+                    <el-icon><Search /></el-icon>
+                  </el-button>
+                </template>
+              </el-input>
             </div>
-          </template>
-          <span>当前镜像包含{{imageDeleteData.versionNum}}个版本，确定要删除吗？</span>
+          </div>
+        </div>
+        
+        <!--公开镜像列表-->
+        <div class="table-container">
+          <el-table 
+            :data="publicImageData" 
+            border 
+            v-loading="publicImageLoading" 
+            :row-style="{ height: '65px' }"
+            :cell-style="{ 'text-align': 'center' }"
+            :header-cell-style="{ 'text-align': 'center', background: '#1a2942', color: '#fff' }"
+            class="image-table"
+          >
+            <el-table-column type="expand" min-width="3%">
+              <template #default="slot">
+                <el-table 
+                  :data="slot.row.image_version" 
+                  style="width: 90%; margin: 15px auto" 
+                  border 
+                  :header-cell-style="{ 'text-align': 'center', background: '#f5f7fa', color: '#606266' }"
+                  :cell-style="{ 'text-align': 'center' }"
+                  class="version-table"
+                >
+                  <el-table-column prop="tag" label="版本号" min-width="13%" align="center"/>
+                  <el-table-column prop="image_version_id" label="版本ID" min-width="13%" align="center"/>
+                  <el-table-column prop="version_desc" label="描述" min-width="13%" align="center"/>
+                  <el-table-column prop="create_time" label="创建时间" min-width="13%" align="center"/>
+                  <el-table-column label="操作" min-width="22%">
+                    <template #default="scope">
+                      <div class="action-buttons">
+                        <el-dropdown class="action-dropdown">
+                          <span class="el-dropdown-link">
+                            部署 <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+                          </span>
+                          <template #dropdown>
+                            <el-dropdown-menu>
+                              <el-dropdown-item @click="createOnlineService(scope.row)">在线服务</el-dropdown-item>
+                            </el-dropdown-menu>
+                          </template>
+                        </el-dropdown>
+                      </div>
+                    </template>
+                  </el-table-column>
+                </el-table>
+              </template>
+            </el-table-column>
+            <el-table-column prop="image_name" label="镜像名称" sortable min-width="12%" align="center"/>
+            <el-table-column prop="image_id" label="镜像ID" min-width="12%" align="center"/>
+            <el-table-column prop="image_desc" label="描述" min-width="12%" align="center"/>
+            <el-table-column prop="username" label="拥有者" min-width="12%" align="center" sortable>
+              <template #default="scope">
+                <div class="owner-cell">
+                  <span>{{scope.row.username}}</span>
+                  <el-tag
+                    :type="scope.row.modify_permission === '其他' ? 'danger' : 'success'"
+                    effect="light"
+                    size="small"
+                    round
+                  >{{ scope.row.modify_permission }}</el-tag>
+                </div>
+              </template>
+            </el-table-column>
+            <el-table-column prop="version_num" label="版本数量" min-width="12%" align="center"/>
+            <el-table-column prop="create_time" label="创建时间" min-width="12%" align="center"/>
+            <el-table-column fixed="right" label="操作" min-width="25%">
+              <template #default="scope">
+                <!-- 公共镜像操作按钮 -->
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+      </div>
+      
+      <!-- 各种弹出对话框保持原样，只是更新样式 -->
+      <!--镜像信息修改对话框-->
+      <el-dialog v-model="modifyMyImageDialog" title="镜像修改" width="500px" class="image-dialog">
+        <el-form
+            label-position="left"
+            label-width="100px"
+            :model="formOfModifyMyImage"
+            style="max-width: 420px;margin-left: 10px"
+        >
+          <el-form-item label="镜像名称">
+            <el-input v-model="formOfModifyMyImage.imageName" disabled />
+          </el-form-item>
+          <el-form-item label="镜像描述">
+            <el-input type="textarea" v-model="formOfModifyMyImage.imageDesc" />
+          </el-form-item>
+          <el-form-item label="是否公开">
+            <el-radio-group v-model="formOfModifyMyImage.isPublic" style="margin-left: 10px" >
+              <el-radio label="不公开" />
+              <el-radio label="公开" />
+            </el-radio-group>
+          </el-form-item>
+        </el-form>
+        <template #footer>
+            <span>
+              <el-button @click="modifyMyImageDialog = false">取消</el-button>
+              <el-button type="primary" @click="modifyMyImage">确定</el-button>
+            </span>
+        </template>
+      </el-dialog>
+
+      <!--镜像创建-->
+      <el-dialog v-model="importMyImageInfoDialog" title="镜像创建" width="30%" class="image-dialog">
+        <el-form
+            label-position="right"
+            label-width="100px"
+            :model="formOfImageInfoImport"
+            style="max-width: 420px;margin-left: 10px"
+            :rules="rules"
+            ref="imageImportRef"
+        >
+          <el-form-item label="镜像名称" prop="imageName">
+            <el-input v-model="formOfImageInfoImport.imageName" />
+          </el-form-item>
+          <el-form-item label="镜像描述">
+            <el-input type="textarea" placeholder="请输入镜像描述，100字以内" maxlength="100" rows="4" v-model="formOfImageInfoImport.imageDesc" />
+          </el-form-item>
+          <el-form-item label="是否公开">
+            <el-radio-group v-model="formOfImageInfoImport.isPublic" style="margin-left: 10px" >
+              <el-radio label="不公开" />
+              <el-radio label="公开" />
+            </el-radio-group>
+          </el-form-item>
+        </el-form>
+        <template #footer>
+            <span>
+              <el-button @click="importMyImageInfoDialog = false">取消</el-button>
+              <el-button type="primary" @click="importMyImageInfo">确定</el-button>
+            </span>
+        </template>
+      </el-dialog>
+
+      <!--新增镜像版本-->
+      <el-dialog v-model="importMyImageVersionDialog" title="新增版本" width="30%" class="image-dialog">
+        <el-form
+            label-position="right"
+            label-width="100px"
+            :model="formOfImageVersionImport"
+            style="max-width: 420px;margin-left: 10px"
+            :rules="rules"
+            ref="imageVersionImportRef"
+        >
+          <el-form-item label="版本号" prop="tag">
+            <el-input v-model="formOfImageVersionImport.tag" placeholder="e.g:1.0"/>
+          </el-form-item>
+          <el-form-item label="描述">
+            <el-input type="textarea" placeholder="请输入镜像版本的描述，100字以内" maxlength="100" rows="4" v-model="formOfImageVersionImport.imageVersionDesc" />
+          </el-form-item>
+          <el-form-item label="上传文件">
+            <el-button @click="uploadFileDialog = true" type="primary" plain>点击上传</el-button>
+          </el-form-item>
+        </el-form>
+        <template #footer>
+            <span>
+              <el-button @click="importMyImageVersionDialog = false">取消</el-button>
+              <el-button type="primary" @click="importMyImageVersion">确定</el-button>
+            </span>
+        </template>
+
+        <!--上传文件窗口-->
+        <el-dialog v-model="uploadFileDialog" title="文件上传" width="35%" class="upload-dialog" append-to-body>
+          <el-upload
+              class="upload-demo"
+              drag
+              action=""
+              :on-change="importFile"
+              :auto-upload="false"
+              :limit="1"
+              :before-upload="beforeUploadFile"
+              ref="uploadRef"
+          >
+            <el-icon class="el-icon--upload"><UploadFilled /></el-icon>
+            <div class="el-upload__text">
+              将文件拖到此处，或<em>点击上传</em>
+            </div>
+            <template #tip>
+              <div class="el-upload__tip">
+                请上传镜像文件的压缩包
+              </div>
+            </template>
+          </el-upload>
           <template #footer>
-          <span>
-            <el-button @click="this.imageDeleteDialog = false">取消</el-button>
-            <el-button type="primary" @click="imageDeleteMethod">确定</el-button>
-          </span>
+            <span>
+              <el-button @click="importFileCancel">取消</el-button>
+              <el-button type="primary" @click="uploadFileDialog = false">确定</el-button>
+            </span>
           </template>
         </el-dialog>
-      </div>
+      </el-dialog>
 
-    </div>
+      <!--上传中-弹出框-->
+      <el-dialog
+          v-model="uploadingDialog"
+          title="文件上传"
+          :show-close="false"
+          width="21%"
+          class="uploading-dialog"
+          :close-on-click-modal="false"
+          :close-on-press-escape="false">
+        <div class="upload-progress-container">
+          <div class="progress-chart">
+            <el-progress type="dashboard" :percentage="completionDic[identifier]">
+              <template #default="{ percentage }">
+                <span class="percentage-value">{{ percentage }}%</span>
+                <span class="percentage-label" v-if="uploadingFlag">上传中</span>
+              </template>
+            </el-progress>
+          </div>
+          <div class="progress-message">
+            <p>{{uploadMessage}}</p>
+          </div>
+        </div>
+        <template #footer>
+          <div>
+            <el-button v-if="!closeFlag" @click="cancelUpload" type="danger">取消上传</el-button>
+            <el-button v-if="closeFlag" type="primary" @click="uploadingDialog = false">关闭</el-button>
+          </div>
+        </template>
+      </el-dialog>
 
-<!--    公开镜像-->
-    <div v-if="pageIndex === 2">
-      <div style="display:flex;padding:40px 2% 0 2%">
-        <!--          <el-button  type="primary" style="width: 80px" @click="modelDeploy">导入</el-button>-->
-        <el-icon size="20px" @click="loadPublicImage({is_public : 1})" style="cursor: pointer"><Refresh /></el-icon>
-        <div style="display: inline-block;flex: 1"></div>
-<!--        <el-select v-model="publicImageOwner" class="m-2" style="width: 250px" @change="selectByImageOwner">-->
-<!--          <el-option-->
-<!--              v-for="item in publicImageOwnerList"-->
-<!--              :key="item.value"-->
-<!--              :label="item.label"-->
-<!--              :value="item.value"-->
-<!--          />-->
-<!--        </el-select>-->
-        <el-input
-            v-model="selectInputByPublicImageName"
-            class="w-50 m-2"
-            clearable
-            style="width: 250px;margin-left: 30px"
-            placeholder="输入镜像名称查询"
-            @clear="loadPublicImage"
-        />
-        <el-button  type="primary" style="margin-left: 10px" @click="selectByPublicImageName">查询</el-button>
-      </div>
-      <!--        公开镜像列表-->
-      <div>
-        <el-table :data="publicImageData" border stripe style="width: 96%;margin: 20px 0 40px 2%" v-loading="publicImageLoading" :row-style="{height:'65px'}">
-          <el-table-column type="expand" min-width="3%">
-            <template v-slot="slot">
-              <el-table :data="slot.row.image_version" style="width: 80%;margin: 0 auto" border stripe>
-                <!--                <el-table-column prop="table_id" label="数据表ID" min-width="13%"/>-->
-                <el-table-column prop="tag" label="版本号" min-width="13%" align="center"/>
-                <el-table-column prop="image_version_id" label="版本ID" min-width="13%" align="center"/>
-                <el-table-column prop="version_desc" label="描述" min-width="13%" align="center"/>
-                <el-table-column prop="create_time" label="创建时间" min-width="13%" align="center"/>
-                <el-table-column fixed="right" label="操作" min-width="22%">
-                  <template #default="scope">
-                    <el-dropdown class="myModelButton">
-                      <span class="el-dropdown-link">
-                        部署
-                        <el-icon class="el-icon--right">  <ArrowDown />  </el-icon>
-                      </span>
-                      <template #dropdown>
-                        <el-dropdown-menu>
-                          <el-dropdown-item @click="createOnlineService(scope.row)">在线服务</el-dropdown-item>
-                          <!--                          <el-dropdown-item>离线服务</el-dropdown-item>-->
-                        </el-dropdown-menu>
-                      </template>
-                    </el-dropdown>
-                  </template>
-                </el-table-column>
-              </el-table>
+      <!--镜像对应服务的列表-->
+      <el-dialog v-model="imageServiceDialog" title="在线服务列表" min-width="500px" class="image-dialog">
+        <el-table 
+          :data="imageServiceData" 
+          border 
+          :header-cell-style="{'text-align': 'center', background: '#f5f7fa'}" 
+          :cell-style="{ 'text-align': 'center' }"
+          v-loading="imageServiceLoading"
+          class="service-table">
+          <el-table-column property="service_name" label="服务名称" min-width="35%" align="center"/>
+          <el-table-column property="service_id" label="服务ID" min-width="35%" align="center">
+            <template #default="scope">
+              <el-link :underline="false" type="primary" @click="toServicePage(scope.row)">{{ scope.row.service_id }}</el-link>
             </template>
           </el-table-column>
-          <el-table-column prop="image_name" label="镜像名称" sortable min-width="12%" align="center"/>
-          <el-table-column prop="image_id" label="镜像ID" min-width="12%" align="center" />
-          <el-table-column prop="image_desc" label="描述" min-width="12%" align="center"/>
-          <el-table-column prop="username" label="拥有者" min-width="12%" align="center" sortable>
+          <el-table-column property="service_state" label="状态" min-width="30%" align="center">
             <template #default="scope">
-              <el-row align="middle" justify="center" :span="24">
-                <p style="margin-right: 10px">{{scope.row.username}}</p>
-                <el-tag
-                    :type="scope.row.modify_permission === '其他' ? 'danger' : 'success'"
-                    disable-transitions
-                >{{ scope.row.modify_permission }}</el-tag>
-              </el-row>
-            </template>
-          </el-table-column>
-          <el-table-column prop="version_num" label="版本数量" min-width="12%" align="center"/>
-          <el-table-column prop="create_time" label="创建时间" min-width="12%" align="center"/>
-          <el-table-column fixed="right" label="操作" min-width="25%">
-            <template #default="scope">
+              <el-tag :style="setStateStyle(scope.row.service_state)" round >{{ serviceStateDic[scope.row.service_state]}}</el-tag>
             </template>
           </el-table-column>
         </el-table>
-      </div>
+        <template #footer>
+          <span>
+            <el-button @click="imageServiceDialog = false">确定</el-button>
+          </span>
+        </template>
+      </el-dialog>
+
+      <!--镜像整体删除的提示弹出框-->
+      <el-dialog v-model="imageDeleteDialog" width="400px" class="confirm-dialog">
+        <template #header>
+          <div class="confirm-header">
+            <el-icon size="20px" color="#ff4949"><WarningFilled /></el-icon>
+            <span class="confirm-title">提示</span>
+          </div>
+        </template>
+        <div class="confirm-content">
+          当前镜像包含 <b>{{imageDeleteData.versionNum}}</b> 个版本，确定要删除吗？
+        </div>
+        <template #footer>
+          <span>
+            <el-button @click="imageDeleteDialog = false">取消</el-button>
+            <el-button type="primary" @click="imageDeleteMethod">确定</el-button>
+          </span>
+        </template>
+      </el-dialog>
     </div>
   </div>
-</div>
 </template>
 
 <script>
-import { UploadFilled,ArrowDown } from '@element-plus/icons-vue';
-import { imageUpload,imageMerge,imagePush,imageSave,imageModify,imageDelete,imageVersionDelete,uploadCancel } from '@/utils/before'
+
+import { UploadFilled, ArrowDown, WarningFilled, Refresh, ArrowRight, Picture, Search, Plus } from '@element-plus/icons-vue';
+import { imageUpload, imageMerge, imagePush, imageSave, imageModify, imageDelete, imageVersionDelete, uploadCancel } from '@/utils/before'
 import request from "@/utils/request";
-import {ElMessage} from "element-plus";
+import { ElMessage } from "element-plus";
 import md5 from 'js-md5';
 import SparkMD5 from 'spark-md5';
 import router from "@/router";
-import {useRoute} from "vue-router";
+import { useRoute } from 'vue-router';
+
 export default {
   name: "ImageList",
+  components: {
+    UploadFilled,
+    ArrowDown,
+    WarningFilled,
+    Refresh,
+    ArrowRight,
+    Picture,
+    Search,
+    Plus,
+  },
   data(){
 
     return{
       a:true,
+      ArrowRight,
+      Picture,
+
       pageIndex:1,
       imageState:'',
       imageStateList:[],
@@ -553,7 +672,31 @@ export default {
     },
   },
   methods:{
-
+    // 获取所有镜像版本总数
+    getTotalVersions(imageList) {
+      let total = 0;
+      imageList.forEach(image => {
+        if (image.version_num) {
+          total += parseInt(image.version_num);
+        }
+      });
+      return total;
+    },
+    
+    // 获取使用中的镜像版本数
+    getUsedImageVersions(imageList) {
+      let usedCount = 0;
+      imageList.forEach(image => {
+        if (image.image_version && image.image_version.length > 0) {
+          image.image_version.forEach(version => {
+            if (version.is_used === 1) {
+              usedCount++;
+            }
+          });
+        }
+      });
+      return usedCount;
+    },
     changePageIndex(param){
       this.pageIndex = param;
     },
@@ -1041,33 +1184,374 @@ export default {
 </script>
 
 <style scoped>
+.image-repository {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.header-area {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 30px;
+  background: linear-gradient(to right, #4c75a3, #4c75a3);
+  border-radius: 8px;
+  color: white;
+  margin: 20px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.tech-title {
+  font-size: 24px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.2);
+  color: #ffffff !important;
+}
+
+/* 面包屑内嵌套元素样式 */
+:deep(.tech-title span),
+:deep(.tech-title div),
+:deep(.tech-title a) {
+  color: #ffffff !important;
+}
+
+.tech-title .el-icon {
+  font-size: 28px;
+  color: #ffffff;
+}
+
+.image-metrics {
+  display: flex;
+  gap: 20px;
+}
+
+.metric-card {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  padding: 10px 20px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.metric-card:hover {
+  transform: translateY(-3px);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.metric-value {
+  font-size: 26px;
+  font-weight: 600;
+}
+
+.metric-label {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.content-panel {
+  background-color: white;
+  margin: 0 20px 20px;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  min-height: calc(100vh - 210px);
+}
+
+.tab-container {
+  margin-bottom: 20px;
+}
+
+.el-menu-m {
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+:deep(.el-menu-m .el-menu-item) {
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+:deep(.el-menu-m .el-menu-item.is-active) {
+  background-color: rgba(76, 117, 163, 0.1);
+  color: #4c75a3;
+}
+
+.action-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 15px 20px;
+  background-color: #f9fafc;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.left-area, .right-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.middle-area {
+  display: flex;
+  align-items: center;
+  flex-grow: 1;
+  margin: 0 20px;
+}
+
+.create-btn {
+  padding: 8px 16px;
+  font-weight: 500;
+}
+
+.search-box {
+  display: flex;
+  flex-direction: column;
+}
+
+.search-input {
+  width: 250px;
+}
+
+.refresh-btn {
+  color: #4c75a3;
+  background-color: rgba(76, 117, 163, 0.05);
+  border-color: #4c75a3;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.refresh-btn:hover {
+  background-color: rgba(76, 117, 163, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 3px 8px rgba(76, 117, 163, 0.2);
+}
+
+.refresh-icon {
+  font-size: 16px;
+  transition: transform 0.6s ease;
+}
+
+/* 添加点击动画效果 */
+.refresh-btn:active .refresh-icon {
+  transform: rotate(360deg);
+}
+
+/* 加载中的动画效果 */
+.refresh-icon.is-loading {
+  animation: spin 1.2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.table-container {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  margin-bottom: 25px;
+}
+
+.image-table {
+  width: 100%;
+}
+
+/* 表格行悬停效果 */
+:deep(.el-table__row) {
+  transition: all 0.2s;
+}
+
+:deep(.el-table__row:hover) {
+  background-color: #f0f8ff !important;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.03);
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-btn {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.action-dropdown {
+  margin: 0 8px;
+}
+
 .el-dropdown-link {
   cursor: pointer;
   color: var(--el-color-primary);
   display: flex;
   align-items: center;
 }
+
+.version-table {
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* 拥有者单元格样式 */
+.owner-cell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 上传进度对话框样式 */
+.upload-progress-container {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+}
+
+.progress-chart {
+  flex: 0 0 auto;
+}
+
+.progress-message {
+  flex: 1;
+  margin-left: 20px;
+  white-space: pre-line;
+  line-height: 1.5;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
 .percentage-value {
   display: block;
   margin-top: 10px;
   font-size: 28px;
+  font-weight: bold;
 }
+
 .percentage-label {
   display: block;
   margin-top: 10px;
   font-size: 12px;
+  color: #606266;
 }
-.messageIndex{
-  z-index: 999999 !important;
+
+/* 删除确认对话框 */
+.confirm-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
-.myModelButton{
-  /*height:20px;*/
-  /*line-height: 20px;*/
-  vertical-align: middle;
-  margin-left: 5px;
+
+.confirm-title {
+  font-size: 18px;
+  color: #ff4949;
+  font-weight: bold;
 }
-/* 鼠标悬浮表格样式 */
-:deep(.el-table--enable-row-hover .el-table__body tr:hover>td.el-table__cell){
-  background-color: rgba(137, 147, 152, 0.15);
+
+.confirm-content {
+  margin: 20px 10px;
+  text-align: center;
+  font-size: 16px;
+}
+
+/* 对话框样式统一 */
+.image-dialog, .upload-dialog, .uploading-dialog, .confirm-dialog {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+:deep(.el-dialog__header) {
+  background-color: #f5f7fa;
+  margin-right: 0;
+  border-bottom: 1px solid #e4e7ed;
+  padding: 15px 20px;
+}
+
+:deep(.el-dialog__body) {
+  padding: 20px;
+}
+
+:deep(.el-dialog__footer) {
+  padding: 10px 20px 20px;
+  border-top: 1px solid #f0f0f0;
+}
+
+:deep(.el-tag) {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+/* 上传组件样式 */
+:deep(.el-upload-dragger) {
+  border: 2px dashed #4c75a3;
+  transition: all 0.3s;
+}
+
+:deep(.el-upload-dragger:hover) {
+  border-color: #409EFF;
+  background-color: rgba(64, 158, 255, 0.05);
+}
+
+:deep(.el-icon--upload) {
+  font-size: 48px;
+  color: #4c75a3;
+  margin-bottom: 10px;
+}
+
+:deep(.el-upload__text) {
+  color: #606266;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+:deep(.el-upload__text em) {
+  color: #4c75a3;
+  font-style: normal;
+  font-weight: 600;
+}
+/* 修改镜像创建按钮样式，与DataScreen保持一致 */
+.create-btn {
+  background: linear-gradient(to right, #1a2942, #2a476e);
+  border: none;
+  border-radius: 6px;
+  transition: all 0.3s;
+  padding: 8px 16px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.create-btn:hover {
+  background: linear-gradient(to right, #2a476e, #1a2942);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 15px rgba(26, 41, 66, 0.2);
+}
+
+.create-btn .el-icon {
+  font-size: 16px;
+  margin-right: 4px;
+}
+
+/* 确保按钮文字为白色 */
+:deep(.create-btn span) {
+  color: #ffffff;
 }
 </style>

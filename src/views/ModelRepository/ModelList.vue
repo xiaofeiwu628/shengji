@@ -1,223 +1,339 @@
 <template>
-  <div>
-    <div>
-      <div style="margin: 20px 0 0 2%">
-        <el-breadcrumb :separator-icon="ArrowRight">
-          <el-breadcrumb-item v-if="pageIndex === 1">我的模型</el-breadcrumb-item>
-          <el-breadcrumb-item v-if="pageIndex === 2">公开模型</el-breadcrumb-item>
-        </el-breadcrumb>
+  <div class="model-repository">
+    <!-- 顶部导航区域 -->
+    <div class="header-area">
+      <el-breadcrumb :separator-icon="ArrowRight">
+        <el-breadcrumb-item class="tech-title">
+          <el-icon><Box /></el-icon>
+          {{ pageIndex === 1 ? '我的模型' : '公开模型' }}
+        </el-breadcrumb-item>
+      </el-breadcrumb>
+      
+      <!-- 模型概览卡片 -->
+      <div class="model-metrics">
+        <div class="metric-card" v-if="pageIndex === 1">
+          <div class="metric-value">{{ myModelData.length }}</div>
+          <div class="metric-label">我的模型总数</div>
+        </div>
+        <div class="metric-card" v-if="pageIndex === 1">
+          <div class="metric-value">{{ getModelsByState('未部署').length }}</div>
+          <div class="metric-label">未部署模型</div>
+        </div>
+        <div class="metric-card" v-if="pageIndex === 1">
+          <div class="metric-value">{{ getModelsByState('已部署').length }}</div>
+          <div class="metric-label">已部署模型</div>
+        </div>
+        <div class="metric-card" v-if="pageIndex === 2">
+          <div class="metric-value">{{ publicModelData.length }}</div>
+          <div class="metric-label">公开模型总数</div>
+        </div>
       </div>
-      <div style="padding: 20px 20px 0 20px;">
-        <el-menu class="el-menu-m" mode="horizontal" default-active="1">
+    </div>
+
+    <div class="content-panel">
+      <!-- 页面导航栏 -->
+      <div class="tab-container">
+        <el-menu class="el-menu-m" mode="horizontal" :default-active="pageIndex.toString()">
           <el-menu-item index="1" @click="changePageIndex(1)">我的模型</el-menu-item>
-          <el-menu-item index="2" @click="changePageIndex(2)" >公开模型</el-menu-item>
+          <el-menu-item index="2" @click="changePageIndex(2)">公开模型</el-menu-item>
         </el-menu>
       </div>
-      <!--    <el-divider style="margin: 15px 0 0 0" />-->
-      <div style="background-color: white;margin: 20px;min-height: calc(100vh - 203px)">
 
-<!--        我的模型-->
-        <div v-if="pageIndex === 1">
-          <!--    导入、搜索查询-->
-          <div style="display:flex;padding:40px 2% 0 2%">
-            <!--          <el-button  type="primary" style="width: 80px" @click="modelDeploy">导入</el-button>-->
-            <el-icon size="20px" @click="loadMyModel" style="cursor: pointer"><Refresh /></el-icon>
-            <div style="display: inline-block;flex: 1"></div>
-            <el-select v-model="taskType" class="m-2" style="width: 250px" @change="selectByTaskType">
-              <el-option
+      <!--我的模型-->
+      <div v-if="pageIndex === 1">
+        <div class="action-bar">
+          <div class="left-area">
+            <el-button 
+              class="refresh-btn" 
+              @click="loadMyModel" 
+              :loading="myModelLoading"
+              type="primary"
+              plain>
+              <el-icon class="refresh-icon" :class="{ 'is-loading': myModelLoading }"><Refresh /></el-icon>
+              刷新列表
+            </el-button>
+          </div>
+          
+          <div class="middle-area">
+            <div class="filter-group">
+              <span class="filter-label">任务类型：</span>
+              <el-select v-model="taskType" class="filter-select" @change="selectByTaskType" placeholder="选择任务类型">
+                <el-option
                   v-for="item in modelStateList"
                   :key="item.value"
                   :label="item.label"
                   :value="item.value"
-              />
-            </el-select>
-            <el-input
+                />
+              </el-select>
+            </div>
+          </div>
+          
+          <div class="right-area">
+            <div class="search-box">
+              <el-input
                 v-model="selectInputByModelName"
-                class="w-50 m-2"
-                clearable
-                style="width: 250px;margin-left: 30px"
                 placeholder="输入模型名称查询"
+                class="search-input"
+                clearable
                 @clear="loadMyModel"
-            />
-            <el-button  type="primary" style="margin-left: 10px" @click="selectByModelName">查询</el-button>
-          </div>
-          <!--        我的模型列表-->
-          <div>
-            <el-table :data="myModelData" border style="width: 96%;margin: 20px 0 40px 2%" v-loading="myModelLoading" :row-style="{height:'65px'}" >
-              <el-table-column type="index" min-width="5%" align="center" />
-              <el-table-column prop="model_name" label="模型名称" min-width="9%" align="center"/>
-              <el-table-column prop="model_id" label="模型ID" min-width="10%" align="center"/>
-              <el-table-column prop="model_state" label="模型状态" min-width="8%" align="center">
-                <template #header>
-                  <span style="vertical-align: middle;display: inline-block;line-height: 20px">{{"模型状态"}}</span>
-                  <el-tooltip  placement="top" effect="light">
-                    <template #content>
-                      未部署：模型当前还未部署<br />已部署：模型当前已完成部署
-                    </template>
-                    <el-icon :size="16" style="vertical-align: middle;cursor: pointer;margin-left: 5px;line-height: 20px"><QuestionFilled /></el-icon>
-                  </el-tooltip>
-
-                </template>
-                <template #default="scope">{{modelStateDic[scope.row.model_state]}}</template>
-              </el-table-column>
-              <el-table-column prop="task_id" label="所属任务ID" min-width="12%" align="center">
-                <template #default="scope">
-                  <el-link :underline="false" type="primary" @click="toTaskDetails(scope.row)">{{ scope.row.task_id }}</el-link>
-                </template>
-              </el-table-column>
-              <el-table-column prop="task_type" label="所属任务类型" min-width="10%" align="center"/>
-              <el-table-column prop="task_history_id" label="任务运行ID" min-width="13%" align="center" />
-              <el-table-column prop="create_time" label="导入时间" min-width="12%" align="center"/>
-              <el-table-column prop="is_public" label="是否公开" min-width="8%" align="center"/>
-              <el-table-column prop='' label="操作" min-width="13%">
-                <template #default="scope">
-
-                  <el-dropdown class="myModelButton" v-if="scope.row.model_state === 'not deployed'">
-                  <span class="el-dropdown-link">
-                    部署
-                    <el-icon class="el-icon--right">  <ArrowDown />  </el-icon>
-                  </span>
-                    <template #dropdown>
-                      <el-dropdown-menu>
-                        <el-dropdown-item @click="createOnlineService(scope.row)">在线服务</el-dropdown-item>
-                        <!--                          <el-dropdown-item>离线服务</el-dropdown-item>-->
-                      </el-dropdown-menu>
-                    </template>
-                  </el-dropdown>
-                  <el-button link type="primary" class="myModelButton" @click="openModifyDialog(scope.row)" v-if="scope.row.model_state === 'not deployed'">修改</el-button>
-                  <el-popconfirm title="确定删除吗？" @confirm="modelDeleteMethod(scope.row)">
-                    <template #reference>
-                      <el-button link type="primary" class="myModelButton">删除</el-button>
-                    </template>
-                  </el-popconfirm>
-
-                </template>
-              </el-table-column>
-            </el-table>
-          </div>
-          <!--    模型信息修改对话框-->
-          <div>
-            <el-dialog v-model="modifyMyModelDialog" title="模型修改" width="500px">
-              <el-form
-                  label-position="left"
-                  label-width="100px"
-                  :model="formOfModifyMyModel"
-                  style="max-width: 420px;margin-left: 10px"
+                @keyup.enter="selectByModelName"
               >
-                <el-form-item label="模型名称">
-                  <el-input v-model="formOfModifyMyModel.modelName" />
-                </el-form-item>
-                <el-form-item label="模型描述">
-                  <el-input type="textarea" v-model="formOfModifyMyModel.modelDesc" />
-                </el-form-item>
-                <el-form-item label="是否公开">
-                  <el-radio-group v-model="formOfModifyMyModel.isPublic" style="margin-left: 10px" >
-                    <el-radio label="不公开" />
-                    <el-radio label="公开" />
-                  </el-radio-group>
-                </el-form-item>
-              </el-form>
-              <template #footer>
-              <span>
-                <el-button @click="this.modifyMyModelDialog = false">取消</el-button>
-                <el-button type="primary" @click="modifyMyModel">确定</el-button>
-              </span>
-              </template>
-            </el-dialog>
+                <template #prefix>
+                  <el-icon><Search /></el-icon>
+                </template>
+                <template #append>
+                  <el-button @click="selectByModelName">
+                    <el-icon><Search /></el-icon>
+                  </el-button>
+                </template>
+              </el-input>
+            </div>
           </div>
         </div>
 
+        <!--我的模型列表-->
+        <div class="table-container">
+          <el-table 
+            :data="myModelData" 
+            border 
+            v-loading="myModelLoading" 
+            :row-style="{ height: '65px' }"
+            :cell-style="{ 'text-align': 'center' }"
+            :header-cell-style="{ 'text-align': 'center', background: '#1a2942', color: '#fff' }"
+            class="model-table"
+          >
+            <el-table-column type="index" min-width="5%" align="center" />
+            <el-table-column prop="model_name" label="模型名称" min-width="9%" align="center"/>
+            <el-table-column prop="model_id" label="模型ID" min-width="10%" align="center"/>
+            <el-table-column prop="model_state" label="模型状态" min-width="8%" align="center">
+              <template #header>
+                <div class="header-with-icon">
+                  <span>模型状态</span>
+                  <el-tooltip placement="top" effect="light">
+                    <template #content>
+                      未部署：模型当前还未部署<br />已部署：模型当前已完成部署
+                    </template>
+                    <el-icon class="info-icon"><QuestionFilled /></el-icon>
+                  </el-tooltip>
+                </div>
+              </template>
+              <template #default="scope">
+                <el-tag 
+                  :type="scope.row.model_state === 'not deployed' ? 'info' : 'success'"
+                  effect="light"
+                  round
+                >
+                  {{ modelStateDic[scope.row.model_state] }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="task_id" label="所属任务ID" min-width="12%" align="center">
+              <template #default="scope">
+                <el-link :underline="false" type="primary" @click="toTaskDetails(scope.row)">{{ scope.row.task_id }}</el-link>
+              </template>
+            </el-table-column>
+            <el-table-column prop="task_type" label="所属任务类型" min-width="10%" align="center"/>
+            <el-table-column prop="task_history_id" label="任务运行ID" min-width="13%" align="center" />
+            <el-table-column prop="create_time" label="导入时间" min-width="12%" align="center"/>
+            <el-table-column prop="is_public" label="是否公开" min-width="8%" align="center">
+              <template #default="scope">
+                <el-tag 
+                  :type="scope.row.is_public === '公开' ? 'success' : 'info'"
+                  round
+                  effect="light"
+                >
+                  {{ scope.row.is_public }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop='' label="操作" min-width="13%">
+              <template #default="scope">
+                <div class="action-buttons">
+                  <el-dropdown v-if="scope.row.model_state === 'not deployed'" class="action-dropdown">
+                    <span class="el-dropdown-link">
+                      部署 <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+                    </span>
+                    <template #dropdown>
+                      <el-dropdown-menu>
+                        <el-dropdown-item @click="createOnlineService(scope.row)">在线服务</el-dropdown-item>
+                      </el-dropdown-menu>
+                    </template>
+                  </el-dropdown>
+                  
+                  <el-button 
+                    v-if="scope.row.model_state === 'not deployed'"
+                    link 
+                    type="primary" 
+                    @click="openModifyDialog(scope.row)" 
+                    class="action-button"
+                  >
+                    修改
+                  </el-button>
+                  
+                  <el-popconfirm title="确定删除吗？" @confirm="modelDeleteMethod(scope.row)">
+                    <template #reference>
+                      <el-button link type="primary" class="action-button">删除</el-button>
+                    </template>
+                  </el-popconfirm>
+                </div>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+        
+        <!--模型信息修改对话框-->
+        <el-dialog v-model="modifyMyModelDialog" title="模型修改" width="500px" class="model-dialog">
+          <el-form
+            label-position="left"
+            label-width="100px"
+            :model="formOfModifyMyModel"
+            style="max-width: 420px;margin-left: 10px"
+          >
+            <el-form-item label="模型名称">
+              <el-input v-model="formOfModifyMyModel.modelName" />
+            </el-form-item>
+            <el-form-item label="模型描述">
+              <el-input type="textarea" v-model="formOfModifyMyModel.modelDesc" />
+            </el-form-item>
+            <el-form-item label="是否公开">
+              <el-radio-group v-model="formOfModifyMyModel.isPublic" style="margin-left: 10px" >
+                <el-radio label="不公开" />
+                <el-radio label="公开" />
+              </el-radio-group>
+            </el-form-item>
+          </el-form>
+          <template #footer>
+            <span>
+              <el-button @click="modifyMyModelDialog = false">取消</el-button>
+              <el-button type="primary" @click="modifyMyModel">确定</el-button>
+            </span>
+          </template>
+        </el-dialog>
+      </div>
 
-
-<!--        公开模型-->
-        <div v-if="pageIndex === 2">
-          <!--    导入、搜索查询-->
-          <div style="display:flex;padding:40px 2% 0 2%">
-            <!--          <el-button  type="primary" style="width: 80px" @click="modelDeploy">导入</el-button>-->
-            <el-icon size="20px" @click="loadPublicModel({is_public:1})" style="cursor: pointer"><Refresh /></el-icon>
-            <div style="display: inline-block;flex: 1"></div>
-            <el-select v-model="publicModelOwner" class="m-2" style="width: 250px" @change="selectByTaskTypeAndPublic">
-              <el-option
+      <!--公开模型-->
+      <div v-if="pageIndex === 2">
+        <div class="action-bar">
+          <div class="left-area">
+            <el-button 
+              class="refresh-btn" 
+              @click="loadPublicModel({is_public:1})" 
+              :loading="publicModelLoading"
+              type="primary"
+              plain>
+              <el-icon class="refresh-icon" :class="{ 'is-loading': publicModelLoading }"><Refresh /></el-icon>
+              刷新列表
+            </el-button>
+          </div>
+          
+          <div class="middle-area">
+            <div class="filter-group">
+              <span class="filter-label">所有者：</span>
+              <el-select v-model="publicModelOwner" class="filter-select" @change="selectByTaskTypeAndPublic" placeholder="选择所有者">
+                <el-option
                   v-for="item in publicModelOwnerList"
                   :key="item.value"
                   :label="item.label"
                   :value="item.value"
-              />
-            </el-select>
-            <el-input
-                v-model="selectInputByModelName"
-                class="w-50 m-2"
-                clearable
-                style="width: 250px;margin-left: 30px"
-                @clear="loadPublicModel"
-            />
-            <el-button  type="primary" style="margin-left: 10px" @click="selectByModelNameAndPublic">查询</el-button>
+                />
+              </el-select>
+            </div>
           </div>
-          <!--        公开模型列表-->
-          <div>
-            <el-table :data="publicModelData" border style="width: 96%;margin: 20px 0 40px 2%" v-loading="publicModelLoading" :row-style="{height:'65px'}" >
-              <el-table-column type="index" min-width="5%" align="center" />
-              <el-table-column prop="model_name" label="模型名称" min-width="9%" align="center"/>
-              <el-table-column prop="model_id" label="模型ID" min-width="10%" align="center"/>
-              <el-table-column prop="username" label="拥有者" min-width="10%" align="center" sortable>
-                <template #default="scope">
-                  <div >
-                    <span style="margin-right: 10px">{{scope.row.username}}</span>
-                    <el-tag
-                        :type="scope.row.modify_permission === 0 ? 'danger' : 'success'"
-                        disable-transitions
-                    >{{ scope.row.modify_permission === 0 ? '其他' : '本人' }}</el-tag>
-                  </div>
+          
+          <div class="right-area">
+            <div class="search-box">
+              <el-input
+                v-model="selectInputByModelName"
+                placeholder="输入模型名称查询"
+                class="search-input"
+                clearable
+                @clear="loadPublicModel"
+                @keyup.enter="selectByModelNameAndPublic"
+              >
+                <template #prefix>
+                  <el-icon><Search /></el-icon>
                 </template>
-              </el-table-column>
-              <el-table-column prop="task_id" label="所属任务ID" min-width="12%" align="center">
-                <template #default="scope">
-                  <el-link :underline="false" type="primary" @click="toTaskDetails(scope.row)">{{ scope.row.task_id }}</el-link>
+                <template #append>
+                  <el-button @click="selectByModelNameAndPublic">
+                    <el-icon><Search /></el-icon>
+                  </el-button>
                 </template>
-              </el-table-column>
-              <el-table-column prop="task_type" label="所属任务类型" min-width="10%" align="center"/>
-              <el-table-column prop="task_history_id" label="任务运行ID" min-width="13%" align="center" />
-<!--              <el-table-column prop="create_time" label="导入时间" min-width="12%" align="center"/>-->
-              <el-table-column prop="is_public" label="是否公开" min-width="8%" align="center"/>
-              <el-table-column prop='' label="操作" min-width="13%">
-                <template #default="scope">
-                  <el-dropdown style="vertical-align: middle;margin-left: 5px" v-if="scope.row.deploy_permission === 1">
-                  <span class="el-dropdown-link">
-                    部署
-                    <el-icon class="el-icon--right">  <ArrowDown />  </el-icon>
-                  </span>
+              </el-input>
+            </div>
+          </div>
+        </div>
+        
+        <!--公开模型列表-->
+        <div class="table-container">
+          <el-table 
+            :data="publicModelData" 
+            border 
+            v-loading="publicModelLoading" 
+            :row-style="{ height: '65px' }"
+            :cell-style="{ 'text-align': 'center' }"
+            :header-cell-style="{ 'text-align': 'center', background: '#1a2942', color: '#fff' }"
+            class="model-table"
+          >
+            <el-table-column type="index" min-width="5%" align="center" />
+            <el-table-column prop="model_name" label="模型名称" min-width="9%" align="center"/>
+            <el-table-column prop="model_id" label="模型ID" min-width="10%" align="center"/>
+            <el-table-column prop="username" label="拥有者" min-width="10%" align="center" sortable>
+              <template #default="scope">
+                <div class="owner-cell">
+                  <span>{{ scope.row.username }}</span>
+                  <el-tag
+                    :type="scope.row.modify_permission === 0 ? 'danger' : 'success'"
+                    effect="light"
+                    size="small"
+                    round
+                  >{{ scope.row.modify_permission === 0 ? '其他' : '本人' }}</el-tag>
+                </div>
+              </template>
+            </el-table-column>
+            <el-table-column prop="task_id" label="所属任务ID" min-width="12%" align="center">
+              <template #default="scope">
+                <el-link :underline="false" type="primary" @click="toTaskDetails(scope.row)">{{ scope.row.task_id }}</el-link>
+              </template>
+            </el-table-column>
+            <el-table-column prop="task_type" label="所属任务类型" min-width="10%" align="center"/>
+            <el-table-column prop="task_history_id" label="任务运行ID" min-width="13%" align="center" />
+            <el-table-column prop="is_public" label="是否公开" min-width="8%" align="center">
+              <template #default="scope">
+                <el-tag 
+                  :type="scope.row.is_public === '公开' ? 'success' : 'info'"
+                  round
+                  effect="light"
+                >
+                  {{ scope.row.is_public }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop='' label="操作" min-width="13%">
+              <template #default="scope">
+                <div class="action-buttons">
+                  <el-dropdown v-if="scope.row.deploy_permission === 1" class="action-dropdown">
+                    <span class="el-dropdown-link">
+                      部署 <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+                    </span>
                     <template #dropdown>
                       <el-dropdown-menu>
                         <el-dropdown-item @click="createOnlineService(scope.row)">在线服务</el-dropdown-item>
-                        <!--                          <el-dropdown-item>离线服务</el-dropdown-item>-->
                       </el-dropdown-menu>
                     </template>
                   </el-dropdown>
-<!--                  公开模型应该不能删除-->
-<!--                  <el-popconfirm title="确定删除吗？" @confirm="modelDeleteMethod(scope.row)">-->
-<!--                    <template #reference>-->
-<!--                      <el-button link type="primary" style="vertical-align: middle;margin-left: 5px">删除</el-button>-->
-<!--                    </template>-->
-<!--                  </el-popconfirm>-->
-
-                </template>
-              </el-table-column>
-            </el-table>
-          </div>
-
+                </div>
+              </template>
+            </el-table-column>
+          </el-table>
         </div>
-
-
-
       </div>
-
     </div>
-
   </div>
 </template>
 
+
 <script>
-import { Calendar,Search,ArrowDown,QuestionFilled } from '@element-plus/icons-vue';
+import { Calendar,Search,ArrowDown,QuestionFilled,Refresh,ArrowRight,Box } from '@element-plus/icons-vue';
 import request from "@/utils/request";
 import router from "@/router";
 import {ElMessage} from "element-plus";
@@ -227,10 +343,21 @@ import {modelDelete} from "@/utils/before";
 
 export default {
   name: "MyModel",
+  components: {
+    Calendar,
+    Search,
+    ArrowDown,
+    QuestionFilled,
+    Refresh,
+    ArrowRight,
+    Box
+  },
   data(){
     const E2C = dictionaryE2C;
     return{
       Calendar,
+      ArrowRight,
+      Box,
       pageIndex:1,
       myModelData:[
         {
@@ -332,6 +459,10 @@ export default {
     }
   },
   methods:{
+    // 添加一个获取特定状态模型的方法
+    getModelsByState(state) {
+      return this.myModelData.filter(model => this.modelStateDic[model.model_state] === state);
+    },
     //切换模型页面
     changePageIndex(param){
       this.pageIndex = param;
@@ -482,19 +613,272 @@ export default {
 </script>
 
 <style scoped>
-.el-dropdown-link {
-  cursor: pointer;
-  color: var(--el-color-primary);
+.model-repository {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.header-area {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 30px;
+  background: linear-gradient(to right, #4c75a3, #4c75a3);
+  border-radius: 8px;
+  color: white;
+  margin: 20px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.tech-title {
+  font-size: 24px;
+  font-weight: 700;
   display: flex;
   align-items: center;
+  gap: 10px;
+  text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.2);
+  color: #ffffff !important;
 }
-.myModelButton{
-  /*height:20px;*/
-  /*line-height: 20px;*/
-  vertical-align: middle;
-  margin-left: 5px;
+
+/* 面包屑内嵌套元素样式 */
+:deep(.tech-title span),
+:deep(.tech-title div),
+:deep(.tech-title a) {
+  color: #ffffff !important;
 }
-:deep(.el-table--enable-row-hover .el-table__body tr:hover>td.el-table__cell){
-  background-color: rgba(137, 147, 152, 0.15);
+
+.tech-title .el-icon {
+  font-size: 28px;
+  color: #ffffff;
+}
+
+.model-metrics {
+  display: flex;
+  gap: 20px;
+}
+
+.metric-card {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  padding: 10px 20px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.metric-card:hover {
+  transform: translateY(-3px);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.metric-value {
+  font-size: 26px;
+  font-weight: 600;
+}
+
+.metric-label {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.content-panel {
+  background-color: white;
+  margin: 0 20px 20px;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  min-height: calc(100vh - 210px);
+}
+
+.tab-container {
+  margin-bottom: 20px;
+}
+
+.el-menu-m {
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+:deep(.el-menu-m .el-menu-item) {
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+:deep(.el-menu-m .el-menu-item.is-active) {
+  background-color: rgba(76, 117, 163, 0.1);
+  color: #4c75a3;
+}
+
+.action-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 15px 20px;
+  background-color: #f9fafc;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.left-area, .right-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.middle-area {
+  display: flex;
+  align-items: center;
+  flex-grow: 1;
+  margin: 0 20px;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  margin-left: 15px;
+}
+
+.filter-label {
+  margin-right: 10px;
+  font-size: 14px;
+  color: #606266;
+}
+
+.filter-select {
+  width: 200px;
+}
+
+.search-box {
+  display: flex;
+  flex-direction: column;
+}
+
+.search-input {
+  width: 250px;
+}
+
+.refresh-btn {
+  color: #4c75a3;
+  background-color: rgba(76, 117, 163, 0.05);
+  border-color: #4c75a3;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.refresh-btn:hover {
+  background-color: rgba(76, 117, 163, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 3px 8px rgba(76, 117, 163, 0.2);
+}
+
+.refresh-icon {
+  font-size: 16px;
+  transition: transform 0.6s ease;
+}
+
+/* 添加点击动画效果 */
+.refresh-btn:active .refresh-icon {
+  transform: rotate(360deg);
+}
+
+/* 加载中的动画效果 */
+.refresh-icon.is-loading {
+  animation: spin 1.2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.table-container {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  margin-bottom: 25px;
+}
+
+.model-table {
+  width: 100%;
+}
+
+/* 表格行悬停效果 */
+:deep(.el-table__row) {
+  transition: all 0.2s;
+}
+
+:deep(.el-table__row:hover) {
+  background-color: #f0f8ff !important;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.03);
+}
+
+/* 表头中的图标样式 */
+.header-with-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.info-icon {
+  font-size: 16px;
+  color: #ffffff;
+}
+
+/* 拥有者单元格样式 */
+.owner-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* 操作按钮样式 */
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.action-button {
+  font-weight: 500;
+}
+
+.action-dropdown {
+  display: inline-block;
+}
+
+.el-dropdown-link {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  color: #409EFF;
+}
+
+/* 对话框样式 */
+.model-dialog {
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+:deep(.model-dialog .el-dialog__header) {
+  background-color: #f5f7fa;
+  margin-right: 0;
+  border-bottom: 1px solid #e4e7ed;
+}
+
+:deep(.el-tag) {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-weight: 500;
 }
 </style>
