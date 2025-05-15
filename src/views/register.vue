@@ -1,69 +1,170 @@
 <template>
-  <div class="login-wrap">
-    <el-form :model="formRegister"
-             class="login-container"
-             :rules="rules"
-             ref="formRegister">
-      <h1 class="title">用户注册</h1>
-      <el-form-item prop="Username" style="margin-bottom: 30px">
-        <el-input v-model="formRegister.Username" placeholder="设置账号" autocomplete="off">
-          <template #prefix>
-            <el-icon class="el-input__icon"><user /></el-icon>
-          </template>
-        </el-input>
-      </el-form-item>
-      <el-form-item prop="Password" style="margin-bottom: 30px">
-        <el-input type="password" v-model="formRegister.Password" placeholder="设置密码" autocomplete="off" show-password>
-          <template #prefix>
-            <el-icon class="el-input__icon"><lock /></el-icon>
-          </template>
-        </el-input>
-      </el-form-item>
-      <el-form-item prop="confirm" style="margin-bottom: 30px">
-        <el-input type="password" v-model="formRegister.confirm" placeholder="重复密码" autocomplete="off" show-password>
-          <template #prefix>
-            <el-icon class="el-input__icon"><lock /></el-icon>
-          </template>
-        </el-input>
-      </el-form-item>
-      <el-form-item prop="code" style="margin-bottom: 30px">
-        <el-row :span="24" type="flex" align="middle">
-          <el-col :span="14">
-            <el-input v-model="formRegister.code" auto-complete="off" placeholder="请输入验证码"></el-input>
-          </el-col>
-          <el-col :span="8" :push="2" style="height: 38px">
-            <div class="login-code" width="100%" @click="refreshCode">
-              <!--验证码组件-->
-              <s-identify :identifyCode="identifyCode"></s-identify>
+  <div class="register-page">
+    <!-- 左侧品牌区域 -->
+    <div class="brand-section">
+      <div class="brand-content">
+        <div class="logo-container">
+          <el-icon class="platform-logo"><Monitor /></el-icon>
+          <h1 class="brand-name">智能中台建模平台</h1>
+        </div>
+        <p class="brand-slogan">一站式AI模型开发、训练与部署平台</p>
+        <div class="feature-points">
+          <div class="feature-item">
+            <el-icon class="feature-icon"><Key /></el-icon>
+            <span>注册即可获取完整功能</span>
+          </div>
+          <div class="feature-item">
+            <el-icon class="feature-icon"><Avatar /></el-icon>
+            <span>个人专属的AI开发空间</span>
+          </div>
+          <div class="feature-item">
+            <el-icon class="feature-icon"><Trophy /></el-icon>
+            <span>免费使用基础模型资源</span>
+          </div>
+        </div>
+      </div>
+      <div class="decoration-circles">
+        <div class="circle circle-1"></div>
+        <div class="circle circle-2"></div>
+        <div class="circle circle-3"></div>
+      </div>
+    </div>
+
+    <!-- 右侧注册表单区域 -->
+    <div class="form-section">
+      <div class="form-container">
+        <h2 class="form-title">创建新账号</h2>
+        <p class="form-subtitle">填写以下信息完成注册</p>
+        
+        <el-form 
+          :model="formRegister"
+          :rules="rules"
+          ref="formRegister"
+          class="register-form"
+        >
+          <el-form-item prop="Username">
+            <el-input 
+              v-model="formRegister.Username" 
+              placeholder="设置账号名称" 
+              autocomplete="off" 
+              size="large"
+            >
+              <template #prefix>
+                <el-icon class="input-icon"><User /></el-icon>
+              </template>
+            </el-input>
+            <div class="input-hint">账号将用于登录系统</div>
+          </el-form-item>
+          
+          <el-form-item prop="Password">
+            <el-input 
+              type="password" 
+              v-model="formRegister.Password" 
+              placeholder="设置密码" 
+              autocomplete="off" 
+              show-password 
+              size="large"
+            >
+              <template #prefix>
+                <el-icon class="input-icon"><Lock /></el-icon>
+              </template>
+            </el-input>
+            <div class="input-hint">密码最少6位数</div>
+          </el-form-item>
+          
+          <el-form-item prop="confirm">
+            <el-input 
+              type="password" 
+              v-model="formRegister.confirm" 
+              placeholder="确认密码" 
+              autocomplete="off" 
+              show-password 
+              size="large"
+            >
+              <template #prefix>
+                <el-icon class="input-icon"><Lock /></el-icon>
+              </template>
+            </el-input>
+          </el-form-item>
+          
+          <el-form-item prop="code">
+            <div class="captcha-container">
+              <el-input 
+                v-model="formRegister.code" 
+                auto-complete="off" 
+                placeholder="请输入验证码" 
+                size="large"
+                class="captcha-input"
+              ></el-input>
+              
+              <div class="captcha-box" @click="refreshCode">
+                <s-identify :identifyCode="identifyCode"></s-identify>
+              </div>
             </div>
-          </el-col>
-        </el-row>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" style="width: 100%;" @click="submit">注册</el-button>
-      </el-form-item>
-      <el-row style="text-align: center;margin-top: -10px;">
-        <el-link type="primary" @click="toLogin" style="margin-left: 40%">用户登录</el-link>
-      </el-row>
-    </el-form>
+            <div class="captcha-hint">点击图片可刷新验证码</div>
+          </el-form-item>
+          
+          <el-form-item>
+            <el-button 
+              type="primary" 
+              class="submit-btn" 
+              @click="submit"
+              :loading="isLoading"
+            >
+              立即注册
+            </el-button>
+          </el-form-item>
+          
+          <div class="form-footer">
+            <span>已有账号？</span>
+            <el-link type="primary" @click="toLogin">返回登录</el-link>
+          </div>
+        </el-form>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import SIdentify from "../components/Identify";
-import {useRouter} from "vue-router/dist/vue-router";
+import { useRouter } from "vue-router";
 import request from "@/utils/request";
+import { User, Lock, Monitor, Key, Avatar, Trophy } from "@element-plus/icons-vue";
+import { ref } from 'vue';
+import { ElMessage } from "element-plus";
+
 export default {
   name: 'register',
   components: {
     SIdentify,
+    User,
+    Lock,
+    Monitor,
+    Key,
+    Avatar,
+    Trophy
   },
-  mounted () {
+  mounted() {
     // 初始化验证码
-    this.identifyCode = ''
-    this.makeCode(this.identifyCodes, 4)
+    this.identifyCode = '';
+    this.makeCode(this.identifyCodes, 4);
   },
-  data(){
+  setup() {
+    const router = useRouter();
+    const isLoading = ref(false);
+    
+    const toLogin = () => {
+      router.push({
+        path: '/login',
+      });
+    };
+    
+    return {
+      toLogin,
+      isLoading
+    };
+  },
+  data() {
     return {
       formRegister: {
         Username: "",
@@ -71,140 +172,372 @@ export default {
         confirm: "",
         code: ""
       },
-      identifyCodes: '1234567890abcdefjhijklinopqrsduvwxyz',//随机串内容
+      identifyCodes: '1234567890abcdefjhijklinopqrsduvwxyz',
       identifyCode: '',
-      // 校验
       rules: {
-        Username: [{ required: true, message: "请输入用户名", trigger: "blur" }],
+        Username: [
+          { required: true, message: "请输入用户名", trigger: "blur" },
+          { min: 3, message: "用户名至少需要3个字符", trigger: "blur" }
+        ],
         Password: [
           { required: true, message: '请输入密码', trigger: 'blur' },
-          { min: 6, message: '密码最少6位数', trigger: 'blur' },
-          // {
-          //   trigger: 'blur',
-          //   validator: (rule, value, callback) => {
-          //     var passwordreg = /(?![A-Z]*$)(?![a-z]*$)(?![0-9]*$)(?![^a-zA-Z0-9]*$)/
-          //     if (!passwordreg.test(value)) {
-          //       callback(
-          //           new Error(
-          //               '密码必须由大写字母、小写字母、数字、特殊符号中的2种及以上类型组成!'
-          //           )
-          //       )
-          //     } else {
-          //       callback()
-          //     }
-          //   }
-          // }
+          { min: 6, message: '密码最少6位数', trigger: 'blur' }
         ],
         confirm: [
-          { required: true, message: '请再次确认密码', trigger: 'blur' }
+          { required: true, message: '请再次确认密码', trigger: 'blur' },
+          {
+            validator: (rule, value, callback) => {
+              if (value !== this.formRegister.Password) {
+                callback(new Error('两次输入的密码不一致!'));
+              } else {
+                callback();
+              }
+            },
+            trigger: 'blur'
+          }
         ],
         code: [{ required: true, message: "请输入验证码", trigger: "blur" }]
       }
-    }
-  },
-  setup(){
-    const router = useRouter()
-    let toLogin = ()=>{//返回登录界面
-      router.push({
-        path: '/login',
-      })
     };
-    return{
-      toLogin
-    }
   },
   methods: {
-    // 重置验证码
-    refreshCode () {
-      this.identifyCode = ''
-      this.makeCode(this.identifyCodes, 4)
+    refreshCode() {
+      this.identifyCode = '';
+      this.makeCode(this.identifyCodes, 4);
     },
-    makeCode (o, l) {
+    makeCode(o, l) {
       for (let i = 0; i < l; i++) {
-        this.identifyCode += this.identifyCodes[this.randomNum(0, this.identifyCodes.length)]
+        this.identifyCode += this.identifyCodes[this.randomNum(0, this.identifyCodes.length)];
       }
     },
-    randomNum (min, max) {
-      return Math.floor(Math.random() * (max - min) + min)
+    randomNum(min, max) {
+      return Math.floor(Math.random() * (max - min) + min);
     },
-    submit() {//点击注册按钮
+    submit() {
       if (this.formRegister.code.toLowerCase() !== this.identifyCode.toLowerCase()) {
-        this.$message.error('请填写正确验证码')
-        this.refreshCode()
-        return
+        ElMessage({
+          message: '请填写正确验证码',
+          type: 'error',
+          offset: 60
+        });
+        this.refreshCode();
+        return;
       }
-      if(this.formRegister.Password == this.formRegister.confirm){
-        this.$refs.formRegister.validate((valid)=>{//触发表单验证
-          if(valid){
-            request.post("/UserLogin/Register", {
-              Username:this.formRegister.Username,
-              Password:this.formRegister.Password,
-            },{headers:{'Content-Type':'multipart/form-data'}}).then(res =>{
-              if(res.code === '0'){
-                this.$message({
-                  type: "success",
-                  message: '注册成功！',
-                  offset:60
-                })
+      
+      if (this.formRegister.Password !== this.formRegister.confirm) {
+        ElMessage({
+          message: '两次密码输入不一致！',
+          type: 'error',
+          offset: 60
+        });
+        return;
+      }
+      
+      this.$refs.formRegister.validate((valid) => {
+        if (valid) {
+          this.isLoading = true;
+          
+          request.post("/UserLogin/Register", {
+            Username: this.formRegister.Username,
+            Password: this.formRegister.Password,
+          }, { headers: { 'Content-Type': 'multipart/form-data' } })
+          .then(res => {
+            if (res.code === '0') {
+              ElMessage({
+                type: "success",
+                message: '注册成功！即将跳转到登录页面...',
+                offset: 60
+              });
+              
+              setTimeout(() => {
                 this.toLogin();
-              } else {
-                this.$message({
-                  type: "error",
-                  message: res.msg,
-                  offset:60
-                })
-              }
-            })
-          }
-          else {
-            this.$message({
-              type:'error',
-              message:'注册失败！',
-              offset:60
-            })
-          }
-        })
-      }
-      else{
-        this.$message({
-          type:'error',
-          message:'两次密码输入不一致！',
-          offset:60
-        })
-      }
-    },
+              }, 1500);
+            } else {
+              ElMessage({
+                type: "error",
+                message: res.msg || '注册失败，请稍后重试',
+                offset: 60
+              });
+            }
+            this.isLoading = false;
+          })
+          .catch(err => {
+            ElMessage({
+              type: "error",
+              message: '网络错误，请稍后重试',
+              offset: 60
+            });
+            this.isLoading = false;
+          });
+        }
+      });
+    }
   }
-}
+};
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.login-wrap {
-  box-sizing: border-box;
+.register-page {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* 左侧品牌区域样式 */
+.brand-section {
+  width: 45%;
+  background: linear-gradient(135deg, #1a2942 0%, #2a476e 50%, #4c75a3 100%);
+  padding: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: white;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
+}
+
+.brand-content {
+  position: relative;
+  z-index: 2;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.platform-logo {
+  font-size: 48px;
+  margin-right: 15px;
+  color: #00c0ee;
+}
+
+.brand-name {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0;
+  background: linear-gradient(90deg, #ffffff, #00c0ee);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.brand-slogan {
+  font-size: 20px;
+  margin-bottom: 50px;
+  opacity: 0.9;
+  line-height: 1.6;
+  max-width: 500px;
+}
+
+.feature-points {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  font-size: 18px;
+  opacity: 0.85;
+  transition: all 0.3s;
+}
+
+.feature-item:hover {
+  transform: translateX(5px);
+  opacity: 1;
+}
+
+.feature-icon {
+  font-size: 24px;
+  color: #00c0ee;
+}
+
+/* 装饰圆圈 */
+.decoration-circles {
+  position: absolute;
   width: 100%;
   height: 100%;
-  padding-top: 10%;
-  background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+Cjxzdmcgd2lkdGg9IjEzNjFweCIgaGVpZ2h0PSI2MDlweCIgdmlld0JveD0iMCAwIDEzNjEgNjA5IiB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPgogICAgPCEtLSBHZW5lcmF0b3I6IFNrZXRjaCA0Ni4yICg0NDQ5NikgLSBodHRwOi8vd3d3LmJvaGVtaWFuY29kaW5nLmNvbS9za2V0Y2ggLS0+CiAgICA8dGl0bGU+R3JvdXAgMjE8L3RpdGxlPgogICAgPGRlc2M+Q3JlYXRlZCB3aXRoIFNrZXRjaC48L2Rlc2M+CiAgICA8ZGVmcz48L2RlZnM+CiAgICA8ZyBpZD0iQW50LURlc2lnbi1Qcm8tMy4wIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMSIgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj4KICAgICAgICA8ZyBpZD0i6LSm5oi35a+G56CB55m75b2VLeagoemqjCIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTc5LjAwMDAwMCwgLTgyLjAwMDAwMCkiPgogICAgICAgICAgICA8ZyBpZD0iR3JvdXAtMjEiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDc3LjAwMDAwMCwgNzMuMDAwMDAwKSI+CiAgICAgICAgICAgICAgICA8ZyBpZD0iR3JvdXAtMTgiIG9wYWNpdHk9IjAuOCIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNzQuOTAxNDE2LCA1NjkuNjk5MTU4KSByb3RhdGUoLTcuMDAwMDAwKSB0cmFuc2xhdGUoLTc0LjkwMTQxNiwgLTU2OS42OTkxNTgpIHRyYW5zbGF0ZSg0LjkwMTQxNiwgNTI1LjE5OTE1OCkiPgogICAgICAgICAgICAgICAgICAgIDxlbGxpcHNlIGlkPSJPdmFsLTExIiBmaWxsPSIjQ0ZEQUU2IiBvcGFjaXR5PSIwLjI1IiBjeD0iNjMuNTc0ODc5MiIgY3k9IjMyLjQ2ODM2NyIgcng9IjIxLjc4MzA0NzkiIHJ5PSIyMS43NjYwMDgiPjwvZWxsaXBzZT4KICAgICAgICAgICAgICAgICAgICA8ZWxsaXBzZSBpZD0iT3ZhbC0zIiBmaWxsPSIjQ0ZEQUU2IiBvcGFjaXR5PSIwLjU5OTk5OTk2NCIgY3g9IjUuOTg3NDY0NzkiIGN5PSIxMy44NjY4NjAxIiByeD0iNS4yMTczOTEzIiByeT0iNS4yMTMzMDk5NyI+PC9lbGxpcHNlPgogICAgICAgICAgICAgICAgICAgIDxwYXRoIGQ9Ik0zOC4xMzU0NTE0LDg4LjM1MjAyMTUgQzQzLjg5ODQyMjcsODguMzUyMDIxNSA0OC41NzAyMzQsODMuNjgzODY0NyA0OC41NzAyMzQsNzcuOTI1NDAxNSBDNDguNTcwMjM0LDcyLjE2NjkzODMgNDMuODk4NDIyNyw2Ny40OTg3ODE2IDM4LjEzNTQ1MTQsNjcuNDk4NzgxNiBDMzIuMzcyNDgwMSw2Ny40OTg3ODE2IDI3LjcwMDY2ODgsNzIuMTY2OTM4MyAyNy43MDA2Njg4LDc3LjkyNTQwMTUgQzI3LjcwMDY2ODgsODMuNjgzODY0NyAzMi4zNzI0ODAxLDg4LjM1MjAyMTUgMzguMTM1NDUxNCw4OC4zNTIwMjE1IFoiIGlkPSJPdmFsLTMtQ29weSIgZmlsbD0iI0NGREFFNiIgb3BhY2l0eT0iMC40NSI+PC9wYXRoPgogICAgICAgICAgICAgICAgICAgIDxwYXRoIGQ9Ik02NC4yNzc1NTgyLDMzLjE3MDQ5NjMgTDExOS4xODU4MzYsMTYuNTY1NDkxNSIgaWQ9IlBhdGgtMTIiIHN0cm9rZT0iI0NGREFFNiIgc3Ryb2tlLXdpZHRoPSIxLjczOTEzMDQzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjwvcGF0aD4KICAgICAgICAgICAgICAgICAgICA8cGF0aCBkPSJNNDIuMTQzMTcwOCwyNi41MDAyNjgxIEw3LjcxMTkwMTYyLDE0LjU2NDA3MDIiIGlkPSJQYXRoLTE2IiBzdHJva2U9IiNFMEI0QjciIHN0cm9rZS13aWR0aD0iMC43MDI2Nzg5NjQiIG9wYWNpdHk9IjAuNyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtZGFzaGFycmF5PSIxLjQwNTM1Nzg5OTg3MzE1MywyLjEwODAzNjk1MzQ2OTk4MSI+PC9wYXRoPgogICAgICAgICAgICAgICAgICAgIDxwYXRoIGQ9Ik02My45MjYyMTg3LDMzLjUyMTU2MSBMNDMuNjcyMTMyNiw2OS4zMjUwOTUxIiBpZD0iUGF0aC0xNSIgc3Ryb2tlPSIjQkFDQUQ5IiBzdHJva2Utd2lkdGg9IjAuNzAyNjc4OTY0IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1kYXNoYXJyYXk9IjEuNDA1MzU3ODk5ODczMTUzLDIuMTA4MDM2OTUzNDY5OTgxIj48L3BhdGg+CiAgICAgICAgICAgICAgICAgICAgPGcgaWQ9Ikdyb3VwLTE3IiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMjYuODUwOTIyLCAxMy41NDM2NTQpIHJvdGF0ZSgzMC4wMDAwMDApIHRyYW5zbGF0ZSgtMTI2Ljg1MDkyMiwgLTEzLjU0MzY1NCkgdHJhbnNsYXRlKDExNy4yODU3MDUsIDQuMzgxODg5KSIgZmlsbD0iI0NGREFFNiI+CiAgICAgICAgICAgICAgICAgICAgICAgIDxlbGxpcHNlIGlkPSJPdmFsLTQiIG9wYWNpdHk9IjAuNDUiIGN4PSI5LjEzNDgyNjUzIiBjeT0iOS4xMjc2ODA3NiIgcng9IjkuMTM0ODI2NTMiIHJ5PSI5LjEyNzY4MDc2Ij48L2VsbGlwc2U+CiAgICAgICAgICAgICAgICAgICAgICAgIDxwYXRoIGQ9Ik0xOC4yNjk2NTMxLDE4LjI1NTM2MTUgQzE4LjI2OTY1MzEsMTMuMjE0MjgyNiAxNC4xNzk4NTE5LDkuMTI3NjgwNzYgOS4xMzQ4MjY1Myw5LjEyNzY4MDc2IEM0LjA4OTgwMTE0LDkuMTI3NjgwNzYgMCwxMy4yMTQyODI2IDAsMTguMjU1MzYxNSBMMTguMjY5NjUzMSwxOC4yNTUzNjE1IFoiIGlkPSJPdmFsLTQiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDkuMTM0ODI3LCAxMy42OTE1MjEpIHNjYWxlKC0xLCAtMSkgdHJhbnNsYXRlKC05LjEzNDgyNywgLTEzLjY5MTUyMSkgIj48L3BhdGg+CiAgICAgICAgICAgICAgICAgICAgPC9nPgogICAgICAgICAgICAgICAgPC9nPgogICAgICAgICAgICAgICAgPGcgaWQ9Ikdyb3VwLTE0IiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgyMTYuMjk0NzAwLCAxMjMuNzI1NjAwKSByb3RhdGUoLTUuMDAwMDAwKSB0cmFuc2xhdGUoLTIxNi4yOTQ3MDAsIC0xMjMuNzI1NjAwKSB0cmFuc2xhdGUoMTA2LjI5NDcwMCwgMzUuMjI1NjAwKSI+CiAgICAgICAgICAgICAgICAgICAgPGVsbGlwc2UgaWQ9Ik92YWwtMiIgZmlsbD0iI0NGREFFNiIgb3BhY2l0eT0iMC4yNSIgY3g9IjI5LjExNzY0NzEiIGN5PSIyOS4xNDAyNDM5IiByeD0iMjkuMTE3NjQ3MSIgcnk9IjI5LjE0MDI0MzkiPjwvZWxsaXBzZT4KICAgICAgICAgICAgICAgICAgICA8ZWxsaXBzZSBpZD0iT3ZhbC0yIiBmaWxsPSIjQ0ZEQUU2IiBvcGFjaXR5PSIwLjMiIGN4PSIyOS4xMTc2NDcxIiBjeT0iMjkuMTQwMjQzOSIgcng9IjIxLjU2ODYyNzUiIHJ5PSIyMS41ODUzNjU5Ij48L2VsbGlwc2U+CiAgICAgICAgICAgICAgICAgICAgPGVsbGlwc2UgaWQ9Ik92YWwtMi1Db3B5IiBzdHJva2U9IiNDRkRBRTYiIG9wYWNpdHk9IjAuNCIgY3g9IjE3OS4wMTk2MDgiIGN5PSIxMzguMTQ2MzQxIiByeD0iMjMuNzI1NDkwMiIgcnk9IjIzLjc0MzkwMjQiPjwvZWxsaXBzZT4KICAgICAgICAgICAgICAgICAgICA8ZWxsaXBzZSBpZD0iT3ZhbC0yIiBmaWxsPSIjQkFDQUQ5IiBvcGFjaXR5PSIwLjUiIGN4PSIyOS4xMTc2NDcxIiBjeT0iMjkuMTQwMjQzOSIgcng9IjEwLjc4NDMxMzciIHJ5PSIxMC43OTI2ODI5Ij48L2VsbGlwc2U+CiAgICAgICAgICAgICAgICAgICAgPHBhdGggZD0iTTI5LjExNzY0NzEsMzkuOTMyOTI2OCBMMjkuMTE3NjQ3MSwxOC4zNDc1NjEgQzIzLjE2MTYzNTEsMTguMzQ3NTYxIDE4LjMzMzMzMzMsMjMuMTc5NjA5NyAxOC4zMzMzMzMzLDI5LjE0MDI0MzkgQzE4LjMzMzMzMzMsMzUuMTAwODc4MSAyMy4xNjE2MzUxLDM5LjkzMjkyNjggMjkuMTE3NjQ3MSwzOS45MzI5MjY4IFoiIGlkPSJPdmFsLTIiIGZpbGw9IiNCQUNBRDkiPjwvcGF0aD4KICAgICAgICAgICAgICAgICAgICA8ZyBpZD0iR3JvdXAtOSIgb3BhY2l0eT0iMC40NSIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTcyLjAwMDAwMCwgMTMxLjAwMDAwMCkiIGZpbGw9IiNFNkExQTYiPgogICAgICAgICAgICAgICAgICAgICAgICA8ZWxsaXBzZSBpZD0iT3ZhbC0yLUNvcHktMiIgY3g9IjcuMDE5NjA3ODQiIGN5PSI3LjE0NjM0MTQ2IiByeD0iNi40NzA1ODgyNCIgcnk9IjYuNDc1NjA5NzYiPjwvZWxsaXBzZT4KICAgICAgICAgICAgICAgICAgICAgICAgPHBhdGggZD0iTTAuNTQ5MDE5NjA4LDEzLjYyMTk1MTIgQzQuMTIyNjI2ODEsMTMuNjIxOTUxMiA3LjAxOTYwNzg0LDEwLjcyMjcyMiA3LjAxOTYwNzg0LDcuMTQ2MzQxNDYgQzcuMDE5NjA3ODQsMy41Njk5NjA5NSA0LjEyMjYyNjgxLDAuNjcwNzMxNzA3IDAuNTQ5MDE5NjA4LDAuNjcwNzMxNzA3IEwwLjU0OTAxOTYwOCwxMy42MjE5NTEyIFoiIGlkPSJPdmFsLTItQ29weS0yIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzLjc4NDMxNCwgNy4xNDYzNDEpIHNjYWxlKC0xLCAxKSB0cmFuc2xhdGUoLTMuNzg0MzE0LCAtNy4xNDYzNDEpICI+PC9wYXRoPgogICAgICAgICAgICAgICAgICAgIDwvZz4KICAgICAgICAgICAgICAgICAgICA8ZWxsaXBzZSBpZD0iT3ZhbC0xMCIgZmlsbD0iI0NGREFFNiIgY3g9IjIxOC4zODIzNTMiIGN5PSIxMzguNjg1OTc2IiByeD0iMS42MTc2NDcwNiIgcnk9IjEuNjE4OTAyNDQiPjwvZWxsaXBzZT4KICAgICAgICAgICAgICAgICAgICA8ZWxsaXBzZSBpZD0iT3ZhbC0xMC1Db3B5LTIiIGZpbGw9IiNFMEI0QjciIG9wYWNpdHk9IjAuMzUiIGN4PSIxNzkuNTU4ODI0IiBjeT0iMTc1LjM4MTA5OCIgcng9IjEuNjE3NjQ3MDYiIHJ5PSIxLjYxODkwMjQ0Ij48L2VsbGlwc2U+CiAgICAgICAgICAgICAgICAgICAgPGVsbGlwc2UgaWQ9Ik92YWwtMTAtQ29weSIgZmlsbD0iI0UwQjRCNyIgb3BhY2l0eT0iMC4zNSIgY3g9IjE4MC4wOTgwMzkiIGN5PSIxMDIuNTMwNDg4IiByeD0iMi4xNTY4NjI3NSIgcnk9IjIuMTU4NTM2NTkiPjwvZWxsaXBzZT4KICAgICAgICAgICAgICAgICAgICA8cGF0aCBkPSJNMjguOTk4NTM4MSwyOS45NjcxNTk4IEwxNzEuMTUxMDE4LDEzMi44NzYwMjQiIGlkPSJQYXRoLTExIiBzdHJva2U9IiNDRkRBRTYiIG9wYWNpdHk9IjAuOCI+PC9wYXRoPgogICAgICAgICAgICAgICAgPC9nPgogICAgICAgICAgICAgICAgPGcgaWQ9Ikdyb3VwLTEwIiBvcGFjaXR5PSIwLjc5OTk5OTk1MiIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTA1NC4xMDA2MzUsIDM2LjY1OTMxNykgcm90YXRlKC0xMS4wMDAwMDApIHRyYW5zbGF0ZSgtMTA1NC4xMDA2MzUsIC0zNi42NTkzMTcpIHRyYW5zbGF0ZSgxMDI2LjYwMDYzNSwgNC42NTkzMTcpIj4KICAgICAgICAgICAgICAgICAgICA8ZWxsaXBzZSBpZD0iT3ZhbC03IiBzdHJva2U9IiNDRkRBRTYiIHN0cm9rZS13aWR0aD0iMC45NDExNzY0NzEiIGN4PSI0My44MTM1NTkzIiBjeT0iMzIiIHJ4PSIxMS4xODY0NDA3IiByeT0iMTEuMjk0MTE3NiI+PC9lbGxpcHNlPgogICAgICAgICAgICAgICAgICAgIDxnIGlkPSJHcm91cC0xMiIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMzQuNTk2Nzc0LCAyMy4xMTExMTEpIiBmaWxsPSIjQkFDQUQ5Ij4KICAgICAgICAgICAgICAgICAgICAgICAgPGVsbGlwc2UgaWQ9Ik92YWwtNyIgb3BhY2l0eT0iMC40NSIgY3g9IjkuMTg1MzQ3MTgiIGN5PSI4Ljg4ODg4ODg5IiByeD0iOC40NzQ1NzYyNyIgcnk9IjguNTU2MTQ5NzMiPjwvZWxsaXBzZT4KICAgICAgICAgICAgICAgICAgICAgICAgPHBhdGggZD0iTTkuMTg1MzQ3MTgsMTcuNDQ1MDM4NiBDMTMuODY1NzI2NCwxNy40NDUwMzg2IDE3LjY1OTkyMzUsMTMuNjE0MzE5OSAxNy42NTk5MjM1LDguODg4ODg4ODkgQzE3LjY1OTkyMzUsNC4xNjM0NTc4NyAxMy44NjU3MjY0LDAuMzMyNzM5MTU2IDkuMTg1MzQ3MTgsMC4zMzI3MzkxNTYgTDkuMTg1MzQ3MTgsMTcuNDQ1MDM4NiBaIiBpZD0iT3ZhbC03Ij48L3BhdGg+CiAgICAgICAgICAgICAgICAgICAgPC9nPgogICAgICAgICAgICAgICAgICAgIDxwYXRoIGQ9Ik0zNC42NTk3Mzg1LDI0LjgwOTY5NCBMNS43MTY2NjA4NCw0Ljc2ODc4OTQ1IiBpZD0iUGF0aC0yIiBzdHJva2U9IiNDRkRBRTYiIHN0cm9rZS13aWR0aD0iMC45NDExNzY0NzEiPjwvcGF0aD4KICAgICAgICAgICAgICAgICAgICA8ZWxsaXBzZSBpZD0iT3ZhbCIgc3Ryb2tlPSIjQ0ZEQUU2IiBzdHJva2Utd2lkdGg9IjAuOTQxMTc2NDcxIiBjeD0iMy4yNjI3MTE4NiIgY3k9IjMuMjk0MTE3NjUiIHJ4PSIzLjI2MjcxMTg2IiByeT0iMy4yOTQxMTc2NSI+PC9lbGxpcHNlPgogICAgICAgICAgICAgICAgICAgIDxlbGxpcHNlIGlkPSJPdmFsLUNvcHkiIGZpbGw9IiNGN0UxQUQiIGN4PSIyLjc5NjYxMDE3IiBjeT0iNjEuMTc2NDcwNiIgcng9IjIuNzk2NjEwMTciIHJ5PSIyLjgyMzUyOTQxIj48L2VsbGlwc2U+CiAgICAgICAgICAgICAgICAgICAgPHBhdGggZD0iTTM0LjYzMTI0NDMsMzkuMjkyMjcxMiBMNS4wNjM2NjY2Myw1OS43ODUwODIiIGlkPSJQYXRoLTEwIiBzdHJva2U9IiNDRkRBRTYiIHN0cm9rZS13aWR0aD0iMC45NDExNzY0NzEiPjwvcGF0aD4KICAgICAgICAgICAgICAgIDwvZz4KICAgICAgICAgICAgICAgIDxnIGlkPSJHcm91cC0xOSIgb3BhY2l0eT0iMC4zMyIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTI4Mi41MzcyMTksIDQ0Ni41MDI4NjcpIHJvdGF0ZSgtMTAuMDAwMDAwKSB0cmFuc2xhdGUoLTEyODIuNTM3MjE5LCAtNDQ2LjUwMjg2NykgdHJhbnNsYXRlKDExNDIuNTM3MjE5LCAzMjcuNTAyODY3KSI+CiAgICAgICAgICAgICAgICAgICAgPGcgaWQ9Ikdyb3VwLTE3IiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxNDEuMzMzNTM5LCAxMDQuNTAyNzQyKSByb3RhdGUoMjc1LjAwMDAwMCkgdHJhbnNsYXRlKC0xNDEuMzMzNTM5LCAtMTA0LjUwMjc0MikgdHJhbnNsYXRlKDEyOS4zMzM1MzksIDkyLjUwMjc0MikiIGZpbGw9IiNCQUNBRDkiPgogICAgICAgICAgICAgICAgICAgICAgICA8Y2lyY2xlIGlkPSJPdmFsLTQiIG9wYWNpdHk9IjAuNDUiIGN4PSIxMS42NjY2NjY3IiBjeT0iMTEuNjY2NjY2NyIgcj0iMTEuNjY2NjY2NyI+PC9jaXJjbGU+CiAgICAgICAgICAgICAgICAgICAgICAgIDxwYXRoIGQ9Ik0yMy4zMzMzMzMzLDIzLjMzMzMzMzMgQzIzLjMzMzMzMzMsMTYuODkwMDExMyAxOC4xMDk5ODg3LDExLjY2NjY2NjcgMTEuNjY2NjY2NywxMS42NjY2NjY3IEM1LjIyMzM0NDU5LDExLjY2NjY2NjcgMCwxNi44OTAwMTEzIDAsMjMuMzMzMzMzMyBMMjMuMzMzMzMzMywyMy4zMzMzMzMzIFoiIGlkPSJPdmFsLTQiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDExLjY2NjY2NywgMTcuNTAwMDAwKSBzY2FsZSgtMSwgLTEpIHRyYW5zbGF0ZSgtMTEuNjY2NjY3LCAtMTcuNTAwMDAwKSAiPjwvcGF0aD4KICAgICAgICAgICAgICAgICAgICA8L2c+CiAgICAgICAgICAgICAgICAgICAgPGNpcmNsZSBpZD0iT3ZhbC01LUNvcHktNiIgZmlsbD0iI0NGREFFNiIgY3g9IjIwMS44MzMzMzMiIGN5PSI4Ny41IiByPSI1LjgzMzMzMzMzIj48L2NpcmNsZT4KICAgICAgICAgICAgICAgICAgICA8cGF0aCBkPSJNMTQzLjUsODguODEyNjY4NSBMMTU1LjA3MDUwMSwxNy42MDM4NTQ0IiBpZD0iUGF0aC0xNyIgc3Ryb2tlPSIjQkFDQUQ5IiBzdHJva2Utd2lkdGg9IjEuMTY2NjY2NjciPjwvcGF0aD4KICAgICAgICAgICAgICAgICAgICA8cGF0aCBkPSJNMTcuNSwzNy4zMzMzMzMzIEwxMjcuNDY2MjUyLDk3LjY0NDk3MzUiIGlkPSJQYXRoLTE4IiBzdHJva2U9IiNCQUNBRDkiIHN0cm9rZS13aWR0aD0iMS4xNjY2NjY2NyI+PC9wYXRoPgogICAgICAgICAgICAgICAgICAgIDxwb2x5bGluZSBpZD0iUGF0aC0xOSIgc3Ryb2tlPSIjQ0ZEQUU2IiBzdHJva2Utd2lkdGg9IjEuMTY2NjY2NjciIHBvaW50cz0iMTQzLjkwMjU5NyAxMjAuMzAyMjgxIDE3NC45MzU0NTUgMjMxLjU3MTM0MiAzOC41IDE0Ny41MTA4NDcgMTI2LjM2Njk0MSAxMTAuODMzMzMzIj48L3BvbHlsaW5lPgogICAgICAgICAgICAgICAgICAgIDxwYXRoIGQ9Ik0xNTkuODMzMzMzLDk5Ljc0NTM4NDIgTDE5NS40MTY2NjcsODkuMjUiIGlkPSJQYXRoLTIwIiBzdHJva2U9IiNFMEI0QjciIHN0cm9rZS13aWR0aD0iMS4xNjY2NjY2NyIgb3BhY2l0eT0iMC42Ij48L3BhdGg+CiAgICAgICAgICAgICAgICAgICAgPHBhdGggZD0iTTIwNS4zMzMzMzMsODIuMTM3MjEwNSBMMjM4LjcxOTQwNiwzNi4xNjY2NjY3IiBpZD0iUGF0aC0yNCIgc3Ryb2tlPSIjQkFDQUQ5IiBzdHJva2Utd2lkdGg9IjEuMTY2NjY2NjciPjwvcGF0aD4KICAgICAgICAgICAgICAgICAgICA8cGF0aCBkPSJNMjY2LjcyMzQyNCwxMzIuMjMxOTg4IEwyMDcuMDgzMzMzLDkwLjQxNjY2NjciIGlkPSJQYXRoLTI1IiBzdHJva2U9IiNDRkRBRTYiIHN0cm9rZS13aWR0aD0iMS4xNjY2NjY2NyI+PC9wYXRoPgogICAgICAgICAgICAgICAgICAgIDxjaXJjbGUgaWQ9Ik92YWwtNSIgZmlsbD0iI0MxRDFFMCIgY3g9IjE1Ni45MTY2NjciIGN5PSI4Ljc1IiByPSI4Ljc1Ij48L2NpcmNsZT4KICAgICAgICAgICAgICAgICAgICA8Y2lyY2xlIGlkPSJPdmFsLTUtQ29weS0zIiBmaWxsPSIjQzFEMUUwIiBjeD0iMzkuMDgzMzMzMyIgY3k9IjE0OC43NSIgcj0iNS4yNSI+PC9jaXJjbGU+CiAgICAgICAgICAgICAgICAgICAgPGNpcmNsZSBpZD0iT3ZhbC01LUNvcHktMiIgZmlsbC1vcGFjaXR5PSIwLjYiIGZpbGw9IiNEMURFRUQiIGN4PSI4Ljc1IiBjeT0iMzMuMjUiIHI9IjguNzUiPjwvY2lyY2xlPgogICAgICAgICAgICAgICAgICAgIDxjaXJjbGUgaWQ9Ik92YWwtNS1Db3B5LTQiIGZpbGwtb3BhY2l0eT0iMC42IiBmaWxsPSIjRDFERUVEIiBjeD0iMjQzLjgzMzMzMyIgY3k9IjMwLjMzMzMzMzMiIHI9IjUuODMzMzMzMzMiPjwvY2lyY2xlPgogICAgICAgICAgICAgICAgICAgIDxjaXJjbGUgaWQ9Ik92YWwtNS1Db3B5LTUiIGZpbGw9IiNFMEI0QjciIGN4PSIxNzUuNTgzMzMzIiBjeT0iMjMyLjc1IiByPSI1LjI1Ij48L2NpcmNsZT4KICAgICAgICAgICAgICAgIDwvZz4KICAgICAgICAgICAgPC9nPgogICAgICAgIDwvZz4KICAgIDwvZz4KPC9zdmc+);
-  /* background-color: #112346; */
-  background-repeat: no-repeat;
-  background-position: center right;
-  background-size: 100%;
+  top: 0;
+  left: 0;
 }
 
-.login-container {
-  border-radius: 10px;
-  margin: 0px auto;
-  width: 350px;
-  padding: 30px 35px 15px 35px;
-  background: #fff;
-  border: 1px solid #eaeaea;
-  text-align: left;
-  box-shadow: 0 0 20px 2px rgba(0, 0, 0, 0.1);
+.circle {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.1;
+  background: radial-gradient(circle, #ffffff 0%, rgba(255,255,255,0) 70%);
 }
 
-.title {
-  margin: 0px auto 40px auto;
+.circle-1 {
+  width: 400px;
+  height: 400px;
+  top: -150px;
+  right: -100px;
+}
+
+.circle-2 {
+  width: 300px;
+  height: 300px;
+  bottom: -100px;
+  left: 10%;
+}
+
+.circle-3 {
+  width: 200px;
+  height: 200px;
+  top: 40%;
+  right: 10%;
+}
+
+/* 右侧表单区域样式 */
+.form-section {
+  width: 55%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8f9fa;
+}
+
+.form-container {
+  width: 450px;
+  padding: 40px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+.form-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a2942;
+  margin-bottom: 10px;
   text-align: center;
-  color: #505458;
+}
+
+.form-subtitle {
+  color: #6c757d;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.register-form {
+  width: 100%;
+}
+
+.input-icon {
+  color: #2a476e;
+}
+
+.input-hint {
+  font-size: 12px;
+  color: #8a94a6;
+  margin-top: 4px;
+  margin-left: 2px;
+}
+
+.captcha-container {
+  display: flex;
+  gap: 10px;
+}
+
+.captcha-input {
+  flex: 1;
+}
+
+.captcha-box {
+  width: 120px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s;
+  overflow: hidden;
+}
+
+.captcha-box:hover {
+  border-color: #00c0ee;
+  box-shadow: 0 0 10px rgba(0, 192, 238, 0.2);
+}
+
+.captcha-hint {
+  font-size: 12px;
+  color: #8a94a6;
+  margin-top: 4px;
+  text-align: right;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  background: linear-gradient(90deg, #00c0ee, #2a84d8);
+  border: none;
+  margin: 10px 0;
+  transition: all 0.3s;
+}
+
+.submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 192, 238, 0.3);
+}
+
+.form-footer {
+  text-align: center;
+  color: #6c757d;
+  margin-top: 20px;
+}
+
+/* 响应式设计 */
+@media (max-width: 992px) {
+  .register-page {
+    flex-direction: column;
+  }
+  
+  .brand-section {
+    width: 100%;
+    padding: 40px;
+  }
+  
+  .form-section {
+    width: 100%;
+    padding: 40px 20px;
+  }
+  
+  .form-container {
+    width: 100%;
+    max-width: 450px;
+  }
+}
+
+/* 表单控件样式覆盖 */
+:deep(.el-input__wrapper) {
+  padding: 4px 11px;
+}
+
+:deep(.el-form-item__error) {
+  color: #f56c6c;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+:deep(.el-form-item) {
+  margin-bottom: 22px;
+}
+
+:deep(.el-button) {
+  border-radius: 6px;
+}
+
+:deep(.el-link) {
+  font-weight: 500;
 }
 </style>

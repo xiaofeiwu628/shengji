@@ -1,8 +1,10 @@
 <template>
   <div class="header-container">
     <div class="logo-area">
-      <el-icon class="platform-icon"><Monitor /></el-icon>
-      <span class="platform-title">智能中台建模平台</span>
+      <router-link to="/home" class="logo-link">
+        <el-icon class="platform-icon"><Monitor /></el-icon>
+        <span class="platform-title">智能中台建模平台</span>
+      </router-link>
     </div>
     
     <div class="user-area">
@@ -298,6 +300,14 @@ export default {
 </script>
 
 <style scoped>
+/* 添加新的样式 */
+.logo-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  cursor: pointer;
+}
 .header-container {
   height: 60px;
   width: 100%;
