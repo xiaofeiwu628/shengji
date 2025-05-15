@@ -92,7 +92,21 @@
                   <el-table-column prop="table_id" label="数据表ID" min-width="13%" />
                   <el-table-column prop="table_name" label="数据表名称" min-width="13%" />
                   <el-table-column prop="row_num" label="行数" min-width="13%" />
-                  <el-table-column prop="col_num" label="列数" min-width="13%" />
+                  <el-table-column prop="col_num" label="列数" min-width="13%">
+                    <template #default="scope">
+                      <span v-if="scope.row.table_type === '.json'">
+                        <el-tag 
+                          type="info" 
+                          effect="plain" 
+                          size="small">
+                          结构化数据
+                        </el-tag>
+                      </span>
+                      <span v-else>
+                        {{ scope.row.col_num }}
+                      </span>
+                    </template>
+                  </el-table-column>
                   <el-table-column prop="table_type" label="类型" min-width="13%">
                     <template #default="scope">
                     <el-tag 
