@@ -591,7 +591,7 @@ export default {
       let middle = {model_id:param.model_id}
       console.log(param.model_id,'modelid in modelDeletemethod')
       modelDelete(middle).then(res=>{
-        this.loadModel(null,2000);
+        this.loadMyModel(null,2000);
         setTimeout(()=>{
           ElMessage({
             message:'删除成功！',

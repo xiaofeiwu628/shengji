@@ -1,164 +1,204 @@
 <template>
-  <div>
-    <div style="margin: 20px 0 0 2%">
-      <el-breadcrumb :separator-icon="ArrowRight">
-        <el-breadcrumb-item :to="{ path: '/taskView' }">自动建模</el-breadcrumb-item>
-        <el-breadcrumb-item>日志</el-breadcrumb-item>
-      </el-breadcrumb>
-    </div>
-    <!--    <el-divider style="margin: 15px 0 0 0" />-->
-    <div style="background-color: white;margin: 20px;min-height: calc(100vh - 124px)">
-      <div style="margin: 40px 0 0 30px;display: inline-block;width: 88%">
-        <span><b>任务ID：</b> </span>
-        <span>{{ this.taskId }}</span>
-        <span style="margin:  0 0 0 100px"><b>任务名称：</b> </span>
-        <span>{{ this.taskName }}</span>
-        <span style="margin:  0 0 0 100px"><b>任务类型：</b> </span>
-        <span>{{ E2C[this.taskType] }}</span>
-        <span style="margin:  0 0 0 100px"><b>任务状态：</b> </span>
-        <span>{{ this.taskState }}</span>
+  <div class="task-details-container">
+    <!-- 头部区域 -->
+    <div class="header-area">
+      <div class="tech-title">
+        <el-icon><DataAnalysis /></el-icon>
+        <el-breadcrumb :separator-icon="ArrowRight" class="nav-breadcrumb">
+          <el-breadcrumb-item :to="{ path: '/taskView' }" class="tech-breadcrumb">
+            自动建模
+          </el-breadcrumb-item>
+          <el-breadcrumb-item class="tech-breadcrumb">
+            任务详情
+          </el-breadcrumb-item>
+        </el-breadcrumb>
       </div>
-      <div style="display: inline-block;">
-        <el-button :disabled="this.taskState !== '未启动'" @click="modifyTask">修改配置</el-button>
+    </div>
+
+    <div class="main-content-wrapper">
+      <!-- 任务信息卡片 -->
+      <div class="task-info-card">
+        <div class="task-info-content">
+          <div class="task-info-item">
+            <span class="info-label">任务ID</span>
+            <span class="info-value">{{ this.taskId }}</span>
+          </div>
+          <div class="task-info-item">
+            <span class="info-label">任务名称</span>
+            <span class="info-value">{{ this.taskName }}</span>
+          </div>
+          <div class="task-info-item">
+            <span class="info-label">任务类型</span>
+            <span class="info-value">{{ E2C[this.taskType] }}</span>
+          </div>
+          <div class="task-info-item">
+            <span class="info-label">任务状态</span>
+            <span class="info-value">
+              <el-tag :type="getStatusType" size="small">{{ this.taskState }}</el-tag>
+            </span>
+          </div>
+        </div>
+        <div class="task-actions">
+          <el-button 
+            type="primary" 
+            :disabled="this.taskState !== '未启动'" 
+            @click="modifyTask"
+          >
+            <el-icon><Edit /></el-icon>
+            修改配置
+          </el-button>
+        </div>
       </div>
 
-      <div style="margin:20px 2% 0 2%">
-        <el-menu class="el-menu-m" mode="horizontal" :default-active="pageIndex">
-          <el-menu-item index="1" @click="changeIndex('1')">日志</el-menu-item>
-          <el-menu-item index="2" @click="changeIndex('2')">评估报告</el-menu-item>
-          <el-menu-item index="3" @click="changeIndex('3')">配置详情</el-menu-item>
+      <!-- 标签页导航 -->
+      <div class="tab-section">
+        <el-menu class="tab-menu" mode="horizontal" :default-active="pageIndex">
+          <el-menu-item index="1" @click="changeIndex('1')">
+            <el-icon><Document /></el-icon>
+            <span>日志</span>
+          </el-menu-item>
+          <el-menu-item index="2" @click="changeIndex('2')">
+            <el-icon><DataLine /></el-icon>
+            <span>评估报告</span>
+          </el-menu-item>
+          <el-menu-item index="3" @click="changeIndex('3')">
+            <el-icon><Setting /></el-icon>
+            <span>配置详情</span>
+          </el-menu-item>
         </el-menu>
-        <!--      <router-view style="margin-bottom: 30px" />-->
       </div>
-      <!--    日志-->
-      <div v-if="pageIndex === '1'">
-        <!--        <div style="margin: 20px 0 0 2%">-->
-        <!--          <span>历史任务：</span>-->
-        <!--          <el-select v-model="taskHistory"  style="margin: 0 20px 0 20px" @change="changeTaskIndex" class="input">-->
-        <!--            <el-option-->
-        <!--                v-for="item in taskHistoryList"-->
-        <!--                :key="item"-->
-        <!--                :label="item"-->
-        <!--                :value="item"-->
-        <!--            />-->
-        <!--          </el-select>-->
-        <!--        </div>-->
-        <div style="margin: 30px 2% 0 2%">
-          <!--        <el-input v-model="taskLog" placeholder="暂无日志！" type="textarea" rows="15" @change="$forceUpdate()"/>-->
-          <ul id='messages' style="margin: 20px 0 0 0;border: black 3px solid" v-loading="logLoading">
-          </ul>
-        </div>
-      </div>
-      <!--    评估报告-->
-      <div v-if="pageIndex === '2'">
-        <div style="margin: 20px 0 0 2%">
-          <span>历史任务：</span>
-          <el-select v-model="taskHistory" style="margin: 0 20px 0 20px" @change="changeTaskIndex" class="input">
-            <el-option
-                v-for="item in taskHistoryList"
-                :key="item"
-                :label="item"
-                :value="item"
-            />
-          </el-select>
-        </div>
-        <!--        评价指标-->
-        <div>
-          <div style="margin: 20px 0 0 2%">
-            <div class="task-title-div"></div>
-            <span class="task-title-name">评价指标</span>
+
+      <!-- 日志内容 -->
+      <div class="content-section" v-if="pageIndex === '1'">
+        <div class="log-panel">
+          <div class="log-header">
+            <div class="log-title">任务运行日志</div>
+            <div class="log-actions">
+              <el-tooltip content="清空日志" placement="top">
+                <el-button size="small" icon="Delete" circle @click="clearLogs"></el-button>
+              </el-tooltip>
+              <el-tooltip content="滚动到底部" placement="top">
+                <el-button size="small" icon="Bottom" circle @click="scrollToBottom"></el-button>
+              </el-tooltip>
+            </div>
           </div>
-          <div>
-            <el-table :data="taskEvaluateData" border style="width:650px;margin: 20px 0 0 2%"
-                      v-loading="evaluationLoading" :header-cell-style="{background:'#F5F5F5'}">
+          <div id="messages" class="log-content" v-loading="logLoading" element-loading-text="正在加载日志..."></div>
+        </div>
+      </div>
+
+      <!-- 评估报告内容 -->
+      <div class="content-section" v-if="pageIndex === '2'">
+        <div class="section-card">
+          <div class="history-selector">
+            <span>历史任务：</span>
+            <el-select v-model="taskHistory" @change="changeTaskIndex" class="history-select">
+              <el-option
+                  v-for="item in taskHistoryList"
+                  :key="item"
+                  :label="item"
+                  :value="item"
+              />
+            </el-select>
+          </div>
+        </div>
+
+        <!-- 评价指标 -->
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-line"></div>
+            <span class="section-title">评价指标</span>
+          </div>
+          <div class="section-content">
+            <el-table 
+              :data="taskEvaluateData" 
+              border 
+              class="data-table"
+              v-loading="evaluationLoading" 
+              :header-cell-style="tableHeaderStyle">
               <el-table-column property="evaluateName" label="评价指标" width="350px" align="center"/>
               <el-table-column property="evaluateValue" label="数值" width="300px" align="center"/>
             </el-table>
           </div>
         </div>
-        <!--        最优超参数-->
-        <!--        <div>-->
-        <!--          <div style="margin: 30px 0 0 20px">-->
-        <!--            <div class="task-title-div"></div>-->
-        <!--            <span class="task-title-name">最优超参数</span>-->
-        <!--          </div>-->
-        <!--          <div>-->
-        <!--            <el-table :data="bestParamTableData" border style="width:650px;margin: 20px 0 0 2%" v-loading="evaluationLoading" :header-cell-style="{background:'#F5F5F5'}">-->
-        <!--              <el-table-column property="param" label="参数" width="350px" align="center" />-->
-        <!--              <el-table-column property="value" label="数值" width="300px" align="center" />-->
-        <!--            </el-table>-->
-        <!--          </div>-->
-        <!--        </div>-->
-
       </div>
-      <!--    配置详情-->
-      <div v-if="pageIndex === '3'">
-        <!--      基本信息-->
-        <div>
-          <div style="margin: 30px 0 0 2%">
-            <div class="task-title-div"></div>
-            <span class="task-title-name">基本信息</span>
+
+      <!-- 配置详情内容 -->
+      <div class="content-section" v-if="pageIndex === '3'">
+        <!-- 基本信息 -->
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-line"></div>
+            <span class="section-title">基本信息</span>
           </div>
-          <div>
-            <div style="margin: 30px 0 0 100px">
-              <span class="span-d">任务名称：</span>
-              <span style="display: inline-block">{{ this.taskName }}</span>
-            </div>
-            <div style="margin: 30px 0 0 100px">
-              <span class="span-d">任务ID：</span>
-              <span style="display: inline-block">{{ this.taskId }}</span>
-            </div>
-            <div style="margin: 30px 0 0 100px">
-              <span class="span-d">任务描述：</span>
-              <span style="display: inline-block">{{ this.taskDescription }}</span>
+          <div class="section-content">
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">任务名称</span>
+                <span class="info-value">{{ this.taskName }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">任务ID</span>
+                <span class="info-value">{{ this.taskId }}</span>
+              </div>
+              <div class="info-item full-width">
+                <span class="info-label">任务描述</span>
+                <span class="info-value">{{ this.taskDescription }}</span>
+              </div>
             </div>
           </div>
         </div>
-        <!--      数据详情-->
-        <div>
-          <div style="margin: 30px 0 0 2%">
-            <div class="task-title-div"></div>
-            <span class="task-title-name">数据详情</span>
+
+        <!-- 数据详情 -->
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-line"></div>
+            <span class="section-title">数据详情</span>
           </div>
-          <div style="margin: 30px 0 0 100px">
+          <div class="section-content">
             <el-table
-                :data="dataDetails"
-                border style="width:90%;"
-                :header-cell-style="{background:'#F5F5F5',color:'#303133'}"
-                v-loading="dataDetailsLoading"
-                :span-method="tableColumnSpanMethod">
+              :data="dataDetails"
+              border 
+              class="data-table"
+              :header-cell-style="tableHeaderStyle"
+              v-loading="dataDetailsLoading"
+              :span-method="tableColumnSpanMethod">
               <el-table-column property="dataSet" label="数据集ID" min-width="10%" align="center"/>
               <el-table-column property="taskType" label="任务类型" min-width="12%" align="center"/>
               <el-table-column property="dataSheetID" label="数据表ID" min-width="12%" align="center"/>
               <el-table-column property="dataSheetName" label="数据表名" min-width="12%" align="center"/>
               <el-table-column property="timeCol" label="时间字段" min-width="12%" align="center"
-                               v-if="taskType==='time_series_prediction'"/>
+                             v-if="taskType==='time_series_prediction'"/>
               <el-table-column property="targetCol" label="目标字段" min-width="12%" align="center"/>
               <el-table-column property="featureCol" label="特征字段" align="center" min-width="42%"
-                               style="word-break: break-word"/>
+                             style="word-break: break-word"/>
             </el-table>
           </div>
         </div>
-        <!--      特征工程配置-->
-        <div>
-          <div style="margin: 30px 0 0 2%">
-            <div class="task-title-div"></div>
-            <span class="task-title-name">特征工程配置</span>
+
+        <!-- 特征工程配置 -->
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-line"></div>
+            <span class="section-title">特征工程配置</span>
           </div>
-          <div style="margin: 30px 0 0 100px">
-            <!--          记录处理-->
-            <div>
-              <span style="display: inline-block;vertical-align: top">记录处理：</span>
-              <div style="display: inline-block;width: 50%">
-                <!--              all-->
+          <div class="section-content">
+            <!-- 记录处理 -->
+            <div class="feature-section">
+              <div class="feature-title">记录处理</div>
+              <div class="feature-content">
+                <!-- all -->
                 <div v-if="rowModel">
-                  <span style="display: inline-block">{{ '使用全部记录' }}</span>
+                  <div class="feature-option">使用全部记录</div>
                 </div>
-                <!--              part-->
+                <!-- part -->
                 <div v-if="!rowModel">
-                  <span style="display: inline-block">{{ '使用部分记录' }}</span>
-                  <el-table :data="partRowConfig" border style="width:100%;margin: 10px 0 0 0 "
-                            v-loading="dataDetailsLoading" :header-cell-style="{background:'#F5F5F5',color:'#303133'}">
+                  <div class="feature-option">使用部分记录</div>
+                  <el-table 
+                    :data="partRowConfig" 
+                    border 
+                    class="data-table"
+                    v-loading="dataDetailsLoading" 
+                    :header-cell-style="tableHeaderStyle">
                     <el-table-column property="andOr" label="字段间逻辑" min-width="20%" align="center"/>
                     <el-table-column property="colName" label="字段" min-width="34%" align="center"/>
                     <el-table-column property="operator" label="字段操作逻辑" min-width="23%" align="center"/>
@@ -168,66 +208,75 @@
               </div>
             </div>
 
-            <!--          字段处理-->
-            <div style="margin: 30px 0 0 0">
-              <span style="display: inline-block;vertical-align: top">字段处理：</span>
-              <div style="display: inline-block;width: 60%">
-                <!--              default-->
+            <!-- 字段处理 -->
+            <div class="feature-section">
+              <div class="feature-title">字段处理</div>
+              <div class="feature-content">
+                <!-- default -->
                 <div v-if="colModel">
-                  <span style="display: inline-block">{{ '所有字段使用相同配置' }}</span>
+                  <div class="feature-option">所有字段使用相同配置</div>
                   <el-table
-                      :data="colDefault" border
-                      style="width:100%;margin: 20px 0 0 0 "
-                      v-loading="dataDetailsLoading"
-                      :header-cell-style="{background:'#F5F5F5',color:'#303133'}"
-                      :span-method="defaultColumnSpanMethod">
+                    :data="colDefault" 
+                    border
+                    class="data-table"
+                    v-loading="dataDetailsLoading"
+                    :header-cell-style="tableHeaderStyle"
+                    :span-method="defaultColumnSpanMethod">
                     <el-table-column property="colName" label="特征策略" min-width="20%" align="center"/>
                     <el-table-column property="methods" label="配置项" min-width="20%" align="center"/>
                     <el-table-column property="value" label="取值" min-width="60%" align="center"/>
                   </el-table>
                 </div>
-                <!--              singleCol-->
+                <!-- singleCol -->
                 <div v-if="!colModel">
-                  <span>{{ '逐字段分别配置' }}</span>
-                  <el-table :data="colSingle" border
-                            style="width: 100%;margin: 10px 0 0 0 "
-                            v-loading="dataDetailsLoading"
-                            max-height="500px"
-                            :header-cell-style="{background:'#F5F5F5',color:'#303133'}"
-                            :span-method="singleColumnSpanMethod">
+                  <div class="feature-option">逐字段分别配置</div>
+                  <el-table 
+                    :data="colSingle" 
+                    border
+                    class="data-table"
+                    v-loading="dataDetailsLoading"
+                    max-height="500px"
+                    :header-cell-style="tableHeaderStyle"
+                    :span-method="singleColumnSpanMethod">
                     <el-table-column property="tableName" label="表名" min-width="15%" align="center"/>
                     <el-table-column property="colName" label="字段" min-width="15%" align="center"/>
                     <el-table-column property="operator" label="处理方法" min-width="15%" align="center"/>
                     <el-table-column property="config" label="配置项" min-width="55%" show-overflow-tooltip="true"
-                                     align="center"/>
+                                   align="center"/>
                   </el-table>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <!--      模型配置信息-->
-        <div style="padding: 1px">
-          <div style="margin: 30px 0 0 2%">
-            <div class="task-title-div"></div>
-            <span class="task-title-name">模型配置信息</span>
+
+        <!-- 模型配置信息 -->
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-line"></div>
+            <span class="section-title">模型配置信息</span>
           </div>
-          <div style="margin: 30px 0 20px 100px">
-            <span>模型名称：{{ modelName }}</span>
-          </div>
-          <!--        样式二-->
-          <div style="margin: 30px 0 20px 100px">
-            <el-table :data="model" border :header-cell-style="{background:'#F5F5F5',color:'#303133'}"
-                      style="width: 70%">
+          <div class="section-content">
+            <div class="model-name">
+              <el-icon><Cpu /></el-icon>
+              <span>模型名称：{{ modelName }}</span>
+            </div>
+            
+            <el-table 
+              :data="model" 
+              border 
+              :header-cell-style="tableHeaderStyle"
+              class="data-table">
               <el-table-column prop="parameter" label="参数" min-width="15%" align="center"/>
               <el-table-column prop="" label="是否调参" min-width="15%" align="center">
                 <template #default="scope">
-                  <el-switch v-model="scope.row.tuneParam" style="margin-left: 0px" disabled/>
+                  <el-switch v-model="scope.row.tuneParam" disabled/>
                 </template>
               </el-table-column>
               <el-table-column prop="defaultValue" label="默认取值" min-width="15%" align="center"/>
               <el-table-column prop="areaValue" label="调参范围" min-width="35%" align="center">
                 <template #default="scope">
+                  <!-- 保持原有的模板内容不变 -->
                   <div v-if="scope.row.tuneParam">
                     <div v-if="scope.row.parameter === '批次大小' || scope.row.parameter === '学习率' || scope.row.parameter === '迭代次数'
                     || scope.row.parameter === '惩罚项系数' || scope.row.parameter === '隐藏层数量' || scope.row.parameter === 'LSTM层数'
@@ -255,11 +304,11 @@
                       </el-select>
                     </div>
                   </div>
-
                 </template>
               </el-table-column>
               <el-table-column prop="area" label="调参步长" align="center" min-width="20%">
                 <template #default="scope">
+                  <!-- 保持原有的模板内容不变 -->
                   <div v-if="scope.row.tuneParam">
                     <div v-if="scope.row.parameter === '批次大小' || scope.row.parameter === '学习率' || scope.row.parameter === '迭代次数'
                     || scope.row.parameter === '惩罚项系数' || scope.row.parameter === '隐藏层数量' || scope.row.parameter === 'LSTM层数'
@@ -282,24 +331,28 @@
                       <span>{{ scope.row.area }}</span>
                     </div>
                   </div>
-
-
                 </template>
               </el-table-column>
-              <!--            <el-table-column prop="description" label="说明"  align="center"/>-->
             </el-table>
           </div>
         </div>
-
       </div>
     </div>
-
-
   </div>
 </template>
 
 <script>
-import {ArrowRight} from '@element-plus/icons-vue';
+import { 
+  ArrowRight, 
+  DataAnalysis, 
+  Document, 
+  DataLine, 
+  Setting, 
+  Edit, 
+  Delete, 
+  Bottom,
+  Cpu,
+} from '@element-plus/icons-vue';
 import {useRoute} from 'vue-router';
 import {ref} from 'vue';
 import request from "@/utils/request";
@@ -314,6 +367,14 @@ export default {
     const E2C = dictionaryE2C;
     return {
       ArrowRight,
+      DataAnalysis,
+      Document,
+      DataLine,
+      Setting,
+      Edit,
+      Delete,
+      Bottom,
+      Cpu,
       taskName: '',
       taskId: '',
       taskType: '',
@@ -343,6 +404,26 @@ export default {
       redFlag: false,
       evaluationLoading: false,
       bestParamTableData: [],
+      tableHeaderStyle: {
+        background: '#f0f5fa',
+        color: '#1a2942',
+        fontSize: '14px',
+        fontWeight: '600',
+        textAlign: 'center',
+        padding: '12px 0',
+        borderBottom: '2px solid #4c75a3',
+      }
+    }
+  },
+  computed: {
+    // 添加计算属性
+    getStatusType() {
+      if (this.taskState === '未启动') return 'info';
+      if (this.taskState === '启动中') return 'warning';
+      if (this.taskState === '运行中') return 'warning';
+      if (this.taskState === '成功') return 'success';
+      if (this.taskState === '失败') return 'danger';
+      return 'info';
     }
   },
   created() {
@@ -380,6 +461,21 @@ export default {
     }
   },
   methods: {
+    // 添加新方法
+    clearLogs() {
+      const messageElement = document.getElementById('messages');
+      if (messageElement) {
+        while (messageElement.firstChild) {
+          messageElement.removeChild(messageElement.firstChild);
+        }
+      }
+    },
+    scrollToBottom() {
+      const messageElement = document.getElementById('messages');
+      if (messageElement) {
+        messageElement.scrollTop = messageElement.scrollHeight;
+      }
+    },
     changeIndex(param) {
       this.pageIndex = param;
     },
@@ -916,21 +1012,374 @@ export default {
 </script>
 
 <style scoped>
-.el-menu-m {
+/* 基础布局样式 */
+.task-details-container {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 头部区域 */
+.header-area {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 30px;
+  background: linear-gradient(to right, #1a2942, #4c75a3);
+  border-radius: 8px;
+  color: white;
+  margin: 20px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.tech-title {
+  font-size: 18px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.tech-title .el-icon {
+  font-size: 22px;
+  color: #ffffff;
+}
+
+.nav-breadcrumb {
+  display: flex;
+  align-items: center;
+}
+
+.tech-breadcrumb {
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff !important;
+}
+
+:deep(.tech-breadcrumb span),
+:deep(.tech-breadcrumb div),
+:deep(.tech-breadcrumb a) {
+  color: #ffffff !important;
+}
+
+:deep(.el-breadcrumb__separator) {
+  color: #ffffff !important;
+}
+
+/* 主内容区域 */
+.main-content-wrapper {
+  background-color: white;
+  margin: 0 20px 20px;
+  border-radius: 8px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  min-height: calc(100vh - 150px);
+}
+
+/* 任务信息卡片 */
+.task-info-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 30px;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #ebeef5;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+  margin-bottom: 20px;
+}
+
+.task-info-content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+}
+
+.task-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.info-label {
+  font-size: 13px;
+  color: #909399;
+}
+
+.info-value {
+  font-size: 15px;
+  font-weight: 500;
+  color: #303133;
+}
+
+.task-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* 标签页导航 */
+.tab-section {
+  margin-bottom: 20px;
+}
+
+.tab-menu {
+  border-radius: 8px;
+  background-color: #f1f5f9;
+  border: 1px solid #ebeef5;
+  overflow: hidden;
+}
+
+:deep(.el-menu--horizontal) {
+  border-bottom: none;
+}
+
+:deep(.el-menu--horizontal .el-menu-item) {
   height: 50px;
-  background-color: #E8ECFA;
+  line-height: 50px;
+  border-bottom: none;
+  font-weight: 500;
 }
 
-.span-d {
-  display: inline-block;
-  width: 100px;
-  text-align: left;
-  vertical-align: top;
+:deep(.el-menu--horizontal .el-menu-item.is-active) {
+  border-bottom: 3px solid #4c75a3;
+  color: #4c75a3;
 }
 
-#messages {
-  list-style-type: none;
+:deep(.el-menu--horizontal .el-menu-item:not(.is-active):hover) {
+  color: #4c75a3;
+}
+
+/* 内容区域通用样式 */
+.content-section {
+  margin-bottom: 20px;
+}
+
+/* 日志面板 */
+.log-panel {
+  border-radius: 8px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.03);
+  border: 1px solid #ebeef5;
+  overflow: hidden;
+}
+
+.log-header {
+  padding: 12px 15px;
+  background-color: #f1f5f9;
+  border-bottom: 1px solid #ebeef5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.log-title {
+  font-weight: 500;
+  color: #1a2942;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.log-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.log-content {
   height: 500px;
   overflow: auto;
+  padding: 10px;
+  background-color: #1a1a1a;
+  font-family: 'Courier New', Courier, monospace;
+  color: #e0e0e0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* 日志样式 */
+:deep(#messages li) {
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin-bottom: 4px;
+  padding: 2px 0;
+}
+
+:deep(#messages li[style*="color: red"]) {
+  color: #ff6b6b !important;
+}
+
+:deep(#messages li[style*="font-weight: bold"]) {
+  font-weight: bold;
+  color: #ff9ff3 !important;
+  background-color: rgba(255, 159, 243, 0.1);
+  padding: 4px;
+  border-radius: 4px;
+}
+
+/* 历史任务选择器 */
+.history-selector {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px;
+}
+
+.history-select {
+  width: 200px;
+}
+
+/* 区块卡片 */
+.section-card {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+  border: 1px solid #ebeef5;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  background-color: #f8fafc;
+}
+
+.section-line {
+  width: 4px;
+  height: 18px;
+  background-color: #4c75a3;
+  border-radius: 2px;
+  margin-right: 10px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a2942;
+}
+
+.section-content {
+  padding: 20px;
+}
+
+/* 信息网格布局 */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.info-item.full-width {
+  grid-column: span 2;
+}
+
+/* 特征工程区块 */
+.feature-section {
+  margin-bottom: 25px;
+}
+
+.feature-section:last-child {
+  margin-bottom: 0;
+}
+
+.feature-title {
+  font-weight: 600;
+  color: #1a2942;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed #e0e7ee;
+}
+
+.feature-content {
+  padding-left: 20px;
+}
+
+.feature-option {
+  background-color: #f0f5fa;
+  padding: 10px 15px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  color: #4c75a3;
+  font-weight: 500;
+  display: inline-block;
+}
+
+/* 模型名称样式 */
+.model-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 15px;
+  background-color: #f0f5fa;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  color: #1a2942;
+  font-weight: 500;
+}
+
+.model-name .el-icon {
+  color: #4c75a3;
+}
+
+/* 数据表格 */
+.data-table {
+  width: 100%;
+  margin-top: 10px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+:deep(.el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell) {
+  background-color: #f8fafc;
+}
+
+:deep(.el-table--enable-row-hover .el-table__body tr:hover > td.el-table__cell) {
+  background-color: #f0f7ff;
+}
+
+/* 加载动画样式 */
+:deep(.el-loading-mask) {
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+:deep(.el-loading-text) {
+  color: #4c75a3;
+}
+
+:deep(.el-loading-spinner .path) {
+  stroke: #4c75a3;
+}
+
+/* 响应式布局 */
+@media screen and (max-width: 768px) {
+  .task-info-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+  
+  .task-info-content {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .info-item.full-width {
+    grid-column: span 1;
+  }
+  
+  .log-content {
+    height: 400px;
+  }
 }
 </style>

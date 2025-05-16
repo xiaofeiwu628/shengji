@@ -1554,4 +1554,233 @@ export default {
 :deep(.create-btn span) {
   color: #ffffff;
 }
+/* 弹窗样式统一优化 */
+:deep(.el-dialog) {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+:deep(.el-dialog__header) {
+  position: relative;
+  background: linear-gradient(to right, #1a2942, #4c75a3);
+  padding: 16px 20px;
+  margin-right: 0;
+  border-bottom: 1px solid #eaeaea;
+  display: flex;
+  align-items: center;
+}
+
+:deep(.el-dialog__title) {
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+:deep(.el-dialog__headerbtn) {
+  position: absolute;
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.3s;
+  z-index: 10;
+}
+
+:deep(.el-dialog__headerbtn .el-dialog__close) {
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+:deep(.el-dialog__headerbtn:hover) {
+  background: rgba(255, 255, 255, 0.35);
+  border-color: white;
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+:deep(.el-dialog__headerbtn:hover .el-dialog__close) {
+  color: white;
+}
+
+:deep(.el-dialog__body) {
+  padding: 24px 30px;
+  background-color: #ffffff;
+}
+
+:deep(.el-dialog__footer) {
+  padding: 12px 30px 20px;
+  border-top: 1px solid #f0f0f0;
+  background-color: #fbfbfb;
+}
+
+/* 表单项样式优化 */
+:deep(.el-form-item__label) {
+  font-weight: 500;
+  color: #1a2942;
+}
+
+:deep(.el-input__inner) {
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+:deep(.el-input__inner:hover) {
+  border-color: #4c75a3;
+}
+
+:deep(.el-input__inner:focus) {
+  border-color: #1a2942;
+  box-shadow: 0 0 0 2px rgba(26, 41, 66, 0.2);
+}
+
+:deep(.el-textarea__inner) {
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+:deep(.el-textarea__inner:hover) {
+  border-color: #4c75a3;
+}
+
+:deep(.el-textarea__inner:focus) {
+  border-color: #1a2942;
+  box-shadow: 0 0 0 2px rgba(26, 41, 66, 0.2);
+}
+
+/* 镜像修改对话框 */
+.image-dialog {
+  min-width: 400px;
+}
+
+/* 上传文件对话框 */
+.upload-dialog :deep(.el-upload-dragger) {
+  border: 2px dashed #4c75a3;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  transition: all 0.3s;
+}
+
+.upload-dialog :deep(.el-upload-dragger:hover) {
+  border-color: #1a2942;
+  background-color: #f0f7ff;
+  transform: translateY(-2px);
+}
+
+.upload-dialog :deep(.el-upload__text) {
+  color: #606266;
+  margin-top: 12px;
+}
+
+.upload-dialog :deep(.el-upload__text em) {
+  color: #4c75a3;
+  font-style: normal;
+  font-weight: 600;
+}
+
+.upload-dialog :deep(.el-upload__tip) {
+  color: #909399;
+  font-size: 13px;
+  margin-top: 10px;
+}
+
+/* 上传进度对话框 */
+.uploading-dialog .upload-progress-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 10px;
+}
+
+.uploading-dialog .progress-chart {
+  margin-bottom: 20px;
+}
+
+.uploading-dialog .progress-message {
+  padding: 15px;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e0e7ee;
+  width: 100%;
+  min-height: 100px;
+  max-height: 150px;
+  overflow-y: auto;
+  font-family: monospace;
+  white-space: pre-line;
+  line-height: 1.6;
+  color: #303133;
+}
+
+/* 确认删除对话框 */
+.confirm-dialog .confirm-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+}
+
+.confirm-dialog .confirm-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #f56c6c;
+}
+
+.confirm-dialog .confirm-content {
+  padding: 20px;
+  text-align: center;
+  font-size: 15px;
+  line-height: 1.8;
+  color: #606266;
+  background-color: rgba(245, 108, 108, 0.05);
+  border-radius: 6px;
+  margin: 10px 0 20px;
+}
+
+.confirm-dialog .confirm-content b {
+  color: #f56c6c;
+  padding: 0 3px;
+  font-size: 17px;
+}
+
+/* 服务列表对话框 */
+.image-service-dialog .service-table {
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* 按钮样式优化 */
+:deep(.el-dialog__footer .el-button--default) {
+  border-color: #d9d9d9;
+  background: white;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+:deep(.el-dialog__footer .el-button--default:hover) {
+  border-color: #c0c4cc;
+  background-color: #f5f7fa;
+  transform: translateY(-1px);
+}
+
+:deep(.el-dialog__footer .el-button--primary) {
+  background: linear-gradient(to right, #1a2942, #4c75a3);
+  border: none;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+:deep(.el-dialog__footer .el-button--primary:hover) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(26, 41, 66, 0.2);
+}
 </style>
