@@ -467,30 +467,58 @@ export default {
     changePageIndex(param){
       this.pageIndex = param;
     },
-    //加载模型的接口
-    loadMyModel(param,time){
+    // //加载模型的接口
+    // loadMyModel(param,time){
+    //   this.myModelLoading = true;
+    //   setTimeout(()=>{
+    //     request.get('/ModelRepository/GetModelList',{
+    //       params:param ? param : {}
+    //     }).then(res=>{
+    //       console.log(res.data,'res.data in myModel')
+    //       this.myModelData = res.data;
+    //       console.log(res.data,'res.data in loadModel')
+    //       this.myModelData.forEach(item=>{
+    //         item.is_public = (item.is_public === '0' ? '不公开':'公开');
+    //         item.task_type = Object.keys(this.E2C).includes(item.task_type) ? this.E2C[item.task_type] : item.task_type;
+    //       })
+    //       this.myModelLoading = false;
+    //     }).catch(err=>{
+    //       this.myModelLoading = false;
+    //       ElMessage({
+    //         message:"加载失败！",
+    //         type:'error',
+    //         offset:60
+    //       });
+    //     })
+    //   },time ? time:1000)
+    // },
+    loadMyModel(param, time) {
       this.myModelLoading = true;
-      setTimeout(()=>{
-        request.get('/ModelRepository/GetModelList',{
-          params:param ? param : {}
-        }).then(res=>{
-          console.log(res.data,'res.data in myModel')
-          this.myModelData = res.data;
-          console.log(res.data,'res.data in loadModel')
-          this.myModelData.forEach(item=>{
-            item.is_public = (item.is_public === '0' ? '不公开':'公开');
-            item.task_type = Object.keys(this.E2C).includes(item.task_type) ? this.E2C[item.task_type] : item.task_type;
+      
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          request.get('/ModelRepository/GetModelList', {
+            params: param ? param : {}
+          }).then(res => {
+            console.log(res.data, 'res.data in myModel')
+            this.myModelData = res.data;
+            this.myModelData.forEach(item => {
+              item.is_public = (item.is_public === '0' ? '不公开' : '公开');
+              item.task_type = Object.keys(this.E2C).includes(item.task_type) ? this.E2C[item.task_type] : item.task_type;
+            })
+            this.myModelLoading = false;
+            resolve(res);
+          }).catch(err => {
+            this.myModelLoading = false;
+            ElMessage({
+              message: "加载失败！",
+              type: 'error',
+              offset: 60
+            });
+            resolve(err); // 即使出错也resolve，以继续后续流程
           })
-          this.myModelLoading = false;
-        }).catch(err=>{
-          this.myModelLoading = false;
-          ElMessage({
-            message:"加载失败！",
-            type:'error',
-            offset:60
-          });
-        })
-      },time ? time:1000)
+        }, time ? time : 1000)
+      });
     },
     //加载公开模型
     loadPublicModel(param,time){
@@ -587,24 +615,57 @@ export default {
       console.log('跳转了')
       router.push({path:'/taskDetails',query:{taskId:param.task_id,taskState:'训练完成',pageIndex:'3'}})
     },
-    modelDeleteMethod(param){
-      let middle = {model_id:param.model_id}
-      console.log(param.model_id,'modelid in modelDeletemethod')
-      modelDelete(middle).then(res=>{
-        this.loadMyModel(null,2000);
-        setTimeout(()=>{
+    // modelDeleteMethod(param){
+    //   let middle = {model_id:param.model_id}
+    //   console.log(param.model_id,'modelid in modelDeletemethod')
+    //   modelDelete(middle).then(res=>{
+    //     this.loadMyModel(null,2000);
+    //     setTimeout(()=>{
+    //       ElMessage({
+    //         message:'删除成功！',
+    //         type:'success',
+    //         offset:60
+    //       })
+    //     },2000)
+    //     console.log(res.data,'res.data in modelDeletemethod')
+    //   }).catch(err=>{
+    //     ElMessage({
+    //       message:'删除失败！',
+    //       type:'error',
+    //       offset:60
+    //     })
+    //   })
+    // },
+    modelDeleteMethod(param) {
+      let middle = { model_id: param.model_id }
+      console.log(param.model_id, 'modelid in modelDeletemethod')
+      
+      // 先显示删除中的加载状态
+      this.myModelLoading = true;
+      
+      modelDelete(middle).then(res => {
+        console.log('删除响应:', res)
+        
+        // 刷新模型列表
+        this.loadMyModel(null, 0).then(() => {
+          // 列表刷新完成后显示成功消息
           ElMessage({
-            message:'删除成功！',
-            type:'success',
-            offset:60
+            message: '删除成功！',
+            type: 'success',
+            offset: 60
           })
-        },2000)
-        console.log(res.data,'res.data in modelDeletemethod')
-      }).catch(err=>{
+        })
+      }).catch(err => {
+        console.error('删除错误:', err)
+        this.myModelLoading = false;
+        
+        // 即使有错误，也尝试刷新列表，因为可能删除已经成功
+        this.loadMyModel(null, 0);
+        
         ElMessage({
-          message:'删除失败！',
-          type:'error',
-          offset:60
+          message: '操作完成，请检查模型是否已删除',
+          type: 'warning',
+          offset: 60
         })
       })
     },
