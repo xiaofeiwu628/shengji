@@ -315,16 +315,16 @@ export default {
   color: #00c0ee;
 }
 
-/* 修改后的品牌名称样式 */
 .brand-name {
   font-size: 32px;
   font-weight: 700;
   margin: 0;
   background: linear-gradient(90deg, #ffffff, #00c0ee);
   -webkit-background-clip: text;
-  background-clip: text; /* 新增标准属性 */
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+
 .brand-slogan {
   font-size: 20px;
   margin-bottom: 50px;

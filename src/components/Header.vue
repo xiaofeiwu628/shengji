@@ -20,13 +20,23 @@
         <template #dropdown>
           <el-dropdown-menu class="custom-dropdown">
             <el-dropdown-item>
-              <el-button text @click="this.logoffForm = {};this.logoffConfirmView = true" class="delete-btn">
+              <el-button 
+                type="danger" 
+                plain
+                @click="this.logoffForm = {};this.logoffConfirmView = true" 
+                class="delete-btn"
+              >
                 <el-icon><Delete /></el-icon>删除账号
               </el-button>
             </el-dropdown-item>
             <el-dropdown-item>
               <!-- 将popconfirm改为普通按钮，点击显示dialog -->
-              <el-button text @click="showLogoutConfirm" class="logout-btn">
+              <el-button 
+                type="warning" 
+                plain
+                @click="showLogoutConfirm" 
+                class="logout-btn"
+              >
                 <el-icon><SwitchButton /></el-icon>退出系统
               </el-button>
             </el-dropdown-item>
@@ -648,5 +658,12 @@ export default {
 
 .input-hint.correct {
   color: #67C23A;
+}
+:deep(.delete-btn.el-button--text) {
+  color: #F56C6C !important;
+}
+
+:deep(.logout-btn.el-button--text) {
+  color: #E6A23C !important;
 }
 </style>
