@@ -199,33 +199,34 @@
     </div>
   </div>
     <div>
-    <!--    执行情况弹窗-->
-    <div>
-      <el-dialog v-model="singleTaskDialogVisible" :title="currentTaskId" width="1000px">
+    <!--执行情况弹窗-->
+    <el-dialog v-model="singleTaskDialogVisible" :title="currentTaskId" width="1000px" class="custom-dialog task-execution-dialog">
+      <div class="execution-content">
         <el-table
           :data="singleTaskSituation"
           border
-          :header-cell-style="{ background: '#F5F5F5' }"
           v-loading="dialogLoading"
         >
           <el-table-column type="expand">
             <template #default="scope">
-              <el-table
-                :data="scope.row.detail_data"
-                style="width: 80%; margin: 0 auto"
-                border
-                :header-cell-style="{ background: '#F5F5F5' }"
-              >
-                <el-table-column property="step" label="步骤" width="100px" align="center" />
-                <el-table-column property="start_time" label="开始时间" align="center" />
-                <el-table-column property="end_time" label="结束时间" align="center" />
-                <el-table-column property="time_consuming" label="耗时" align="center" />
-                <el-table-column property="state" label="当前状态" align="center">
-                  <template #default="scope2">
-                    <el-tag type="" round :style="setStatusStyle(scope2.row.state)">{{ scope2.row.state }}</el-tag>
-                  </template>
-                </el-table-column>
-              </el-table>
+              <div class="detail-table-wrapper">
+                <h4 class="detail-table-title">详细步骤</h4>
+                <el-table
+                  :data="scope.row.detail_data"
+                  style="width: 90%; margin: 0 auto"
+                  border
+                >
+                  <el-table-column property="step" label="步骤" width="100px" align="center" />
+                  <el-table-column property="start_time" label="开始时间" align="center" />
+                  <el-table-column property="end_time" label="结束时间" align="center" />
+                  <el-table-column property="time_consuming" label="耗时" align="center" />
+                  <el-table-column property="state" label="当前状态" align="center">
+                    <template #default="scope2">
+                      <el-tag type="" round :style="setStatusStyle(scope2.row.state)">{{ scope2.row.state }}</el-tag>
+                    </template>
+                  </el-table-column>
+                </el-table>
+              </div>
             </template>
           </el-table-column>
           <el-table-column property="history_id" label="执行次数" width="100px" align="center" />
@@ -234,19 +235,19 @@
           <el-table-column property="total_time_consuming" label="耗时" align="center" />
           <el-table-column property="current_state" label="当前状态" align="center">
             <template #default="scope">
-              <el-tag type="" round :style="setStatusStyle(scope.row.current_state)"
-                >{{ scope.row.current_state }}
+              <el-tag type="" round :style="setStatusStyle(scope.row.current_state)">
+                {{ scope.row.current_state }}
               </el-tag>
             </template>
           </el-table-column>
         </el-table>
-        <template #footer>
-          <span>
-            <el-button @click="this.singleTaskDialogVisible = false">确定</el-button>
-          </span>
-        </template>
-      </el-dialog>
-    </div>
+      </div>
+      <template #footer>
+        <span>
+          <el-button @click="singleTaskDialogVisible = false">确定</el-button>
+        </span>
+      </template>
+    </el-dialog>
     <!--    定时弹窗-->
     <div>
       <el-dialog v-model="timeDialogVisible" :title="currentTaskId" width="500px">
@@ -269,50 +270,51 @@
     </div>
     <!--    入库弹窗-->
     <div>
-      <el-dialog v-model="toHouseDialogVisible" title="模型入库" width="500px">
-        <el-form
-          label-position="right"
-          label-width="100px"
-          :model="form"
-          style="max-width: 420px"
-          v-loading="formLoading"
-          :rules="rules"
-          ref="toHouseRef"
-        >
-          <el-form-item label="模型名称" prop="modelName" :inline-message="true">
-            <el-input style="margin-left: 10px" v-model="form.modelName" :disabled="modelNameDisabled" />
-          </el-form-item>
-          <el-form-item label="历史任务">
-            <el-select
-              v-model="form.currentHistoryId"
-              class="m-2"
-              placeholder="Select"
-              :disabled="historyTaskDisabled"
-              style="margin-left: 10px"
-            >
-              <el-option v-for="item in historyListOfTask" :key="item" :label="item" :value="item" />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="是否公开">
-            <el-radio-group v-model="form.isPublic" style="margin-left: 10px">
-              <el-radio label="不公开" />
-              <el-radio label="公开" />
-            </el-radio-group>
-          </el-form-item>
-          <el-form-item label="模型描述">
-            <el-input
-              type="textarea"
-              v-model="form.modelDesc"
-              placeholder="请输入模型描述，100字以内"
-              maxlength="100"
-              rows="4"
-              style="margin-left: 10px"
-            />
-          </el-form-item>
-        </el-form>
+      <!--入库弹窗-->
+      <el-dialog v-model="toHouseDialogVisible" title="模型入库" width="500px" class="custom-dialog model-save-dialog">
+        <div class="model-save-content">
+          <el-form
+            label-position="right"
+            label-width="100px"
+            :model="form"
+            style="max-width: 420px"
+            v-loading="formLoading"
+            :rules="rules"
+            ref="toHouseRef"
+          >
+            <el-form-item label="模型名称" prop="modelName" :inline-message="true">
+              <el-input v-model="form.modelName" :disabled="modelNameDisabled" />
+            </el-form-item>
+            <el-form-item label="历史任务">
+              <el-select
+                v-model="form.currentHistoryId"
+                class="history-select"
+                placeholder="选择历史任务"
+                :disabled="historyTaskDisabled"
+              >
+                <el-option v-for="item in historyListOfTask" :key="item" :label="item" :value="item" />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="是否公开">
+              <el-radio-group v-model="form.isPublic">
+                <el-radio label="不公开" />
+                <el-radio label="公开" />
+              </el-radio-group>
+            </el-form-item>
+            <el-form-item label="模型描述">
+              <el-input
+                type="textarea"
+                v-model="form.modelDesc"
+                placeholder="请输入模型描述，100字以内"
+                maxlength="100"
+                rows="4"
+              />
+            </el-form-item>
+          </el-form>
+        </div>
         <template #footer>
           <span>
-            <el-button @click="this.toHouseDialogVisible = false">取消</el-button>
+            <el-button @click="toHouseDialogVisible = false">取消</el-button>
             <el-button type="primary" @click="formValidate" :disabled="historyTaskDisabled">确定</el-button>
           </span>
         </template>
@@ -1050,5 +1052,195 @@ export default {
 
 :deep(.clear-search .el-icon) {
   margin-right: 2px;
+}
+/* 弹窗通用样式 */
+:deep(.custom-dialog .el-dialog__header) {
+  position: relative;
+  background: linear-gradient(to right, #1a2942, #4c75a3);
+  padding: 16px 20px;
+  margin-right: 0;
+  border-bottom: 1px solid #eaeaea;
+  display: flex;
+  align-items: center;
+}
+
+:deep(.custom-dialog .el-dialog__title) {
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+:deep(.custom-dialog .el-dialog__headerbtn) {
+  position: absolute;
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.3s;
+  z-index: 10;
+}
+
+:deep(.custom-dialog .el-dialog__headerbtn .el-dialog__close) {
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+:deep(.custom-dialog .el-dialog__headerbtn:hover) {
+  background: rgba(255, 255, 255, 0.35);
+  border-color: white;
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+:deep(.custom-dialog .el-dialog__headerbtn:hover .el-dialog__close) {
+  color: white;
+}
+
+:deep(.custom-dialog .el-dialog__body) {
+  padding: 24px 30px;
+}
+
+:deep(.custom-dialog .el-dialog__footer) {
+  padding: 12px 30px 20px;
+  border-top: 1px solid #f0f0f0;
+  background-color: #fbfbfb;
+}
+
+/* 执行情况弹窗特定样式 */
+.task-execution-dialog :deep(.el-table) {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
+}
+
+.task-execution-dialog :deep(.el-table th) {
+  background-color: #f0f5fa !important;
+  color: #1a2942 !important;
+  font-weight: 600 !important;
+  padding: 12px 0;
+}
+
+.task-execution-dialog :deep(.el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell) {
+  background-color: #f8fafc;
+}
+
+.task-execution-dialog :deep(.el-table--enable-row-hover .el-table__body tr:hover > td.el-table__cell) {
+  background-color: #f0f7ff;
+}
+
+/* 入库弹窗特定样式 */
+.model-save-dialog :deep(.el-form-item__label) {
+  font-weight: 500;
+  color: #1a2942;
+}
+
+.model-save-dialog :deep(.el-input__inner) {
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.model-save-dialog :deep(.el-input__inner:hover) {
+  border-color: #4c75a3;
+}
+
+.model-save-dialog :deep(.el-input__inner:focus) {
+  border-color: #1a2942;
+  box-shadow: 0 0 0 2px rgba(26, 41, 66, 0.2);
+}
+
+.model-save-dialog :deep(.el-textarea__inner) {
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.model-save-dialog :deep(.el-textarea__inner:hover) {
+  border-color: #4c75a3;
+}
+
+.model-save-dialog :deep(.el-textarea__inner:focus) {
+  border-color: #1a2942;
+  box-shadow: 0 0 0 2px rgba(26, 41, 66, 0.2);
+}
+
+.model-save-dialog :deep(.el-radio__input.is-checked .el-radio__inner) {
+  background-color: #4c75a3;
+  border-color: #4c75a3;
+}
+
+.model-save-dialog :deep(.el-radio__input.is-checked + .el-radio__label) {
+  color: #4c75a3;
+}
+
+/* 按钮样式优化 */
+:deep(.custom-dialog .el-dialog__footer .el-button--default) {
+  border-color: #d9d9d9;
+  background: white;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+:deep(.custom-dialog .el-dialog__footer .el-button--default:hover) {
+  border-color: #c0c4cc;
+  background-color: #f5f7fa;
+  transform: translateY(-1px);
+}
+
+:deep(.custom-dialog .el-dialog__footer .el-button--primary) {
+  background: linear-gradient(to right, #1a2942, #4c75a3);
+  border: none;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+:deep(.custom-dialog .el-dialog__footer .el-button--primary:hover) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(26, 41, 66, 0.2);
+}
+/* 执行情况内容样式 */
+.execution-content {
+  padding: 10px 0;
+}
+
+.detail-table-wrapper {
+  padding: 15px 5px;
+}
+
+.detail-table-title {
+  color: #1a2942;
+  font-size: 14px;
+  margin: 5px 5% 15px;
+  font-weight: 600;
+}
+/* 入库弹窗内容样式 */
+.model-save-content {
+  padding: 10px 0;
+}
+
+.model-save-dialog .history-select {
+  width: 100%;
+}
+
+.model-save-dialog :deep(.el-form-item) {
+  margin-bottom: 22px;
+}
+
+.model-save-dialog :deep(.el-form-item.is-error .el-input__inner) {
+  border-color: #f56c6c;
+}
+
+.model-save-dialog :deep(.el-form-item__error) {
+  padding-top: 4px;
+  font-size: 13px;
 }
 </style>
