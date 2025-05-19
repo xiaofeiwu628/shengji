@@ -1,35 +1,36 @@
 <template>
-  <div>
-    <div style="margin: 20px 0 0 2%">
-      <el-breadcrumb :separator-icon="ArrowRight">
-        <el-breadcrumb-item :to="{ path: '/taskView' }">自动建模</el-breadcrumb-item>
-        <el-breadcrumb-item :to="{ path: '/taskCreate' }" @click="this.pageIndex = 0" v-if="pageIndex >= 0"
-          >新建任务
-        </el-breadcrumb-item>
-        <el-breadcrumb-item :to="{ path: '/taskCreate' }" @click="this.pageIndex = 1" v-if="pageIndex >= 1"
-          >选择数据
-        </el-breadcrumb-item>
-        <el-breadcrumb-item :to="{ path: '/taskCreate' }" @click="this.pageIndex = 2" v-if="pageIndex >= 2 && taskTypeValue !== 'named_entity_recognition'">
-          特征工程策略
-        </el-breadcrumb-item>
-        <el-breadcrumb-item :to="{ path: '/taskCreate' }" @click="this.pageIndex = 3" v-if="pageIndex >= 3"
-          >模型选择
-        </el-breadcrumb-item>
-        <el-breadcrumb-item v-if="pageIndex >= 4">其他参数配置</el-breadcrumb-item>
-      </el-breadcrumb>
-    </div>
 
-    <div style="background-color: white; margin: 20px; min-height: calc(100vh - 124px)">
+
+      <div class="header-area">
+            <el-breadcrumb :separator-icon="ArrowRight">
+              <el-breadcrumb-item :to="{ path: '/taskView' }">自动建模</el-breadcrumb-item>
+              <el-breadcrumb-item :to="{ path: '/taskCreate' }" @click="this.pageIndex = 0" v-if="pageIndex >= 0"
+                >新建任务
+              </el-breadcrumb-item>
+              <el-breadcrumb-item :to="{ path: '/taskCreate' }" @click="this.pageIndex = 1" v-if="pageIndex >= 1"
+                >选择数据
+              </el-breadcrumb-item>
+              <el-breadcrumb-item :to="{ path: '/taskCreate' }" @click="this.pageIndex = 2" v-if="pageIndex >= 2 && taskTypeValue !== 'named_entity_recognition'">
+                特征工程策略
+              </el-breadcrumb-item>
+              <el-breadcrumb-item :to="{ path: '/taskCreate' }" @click="this.pageIndex = 3" v-if="pageIndex >= 3"
+                >模型选择
+              </el-breadcrumb-item>
+              <el-breadcrumb-item v-if="pageIndex >= 4">其他参数配置</el-breadcrumb-item>
+            </el-breadcrumb>
+      </div>
+
+    <div class="main-content-wrapper">
       <!--    新建任务-->
       <div v-if="pageIndex === 0">
         <div style="padding: 20px 0 20px 0">
-          <div style="margin: 0 0 0 20px">
-            <div class="task-title-div"></div>
-            <span class="task-title-name">基本信息</span>
+          <div class="section-header">
+            <div class="section-line"></div>
+            <span class="secyion-title">基本信息</span>
           </div>
-          <div style="margin: 0 0 0 30px">
-            <div style="margin: 40px 0 0 40px">
-              <span class="span-d">* 任务名称：</span>
+          <div class="form-section">
+            <div class="form-row">
+              <span class="span-d"><span style="color: #f56c6c; font-weight: bold;">*</span> 任务名称：</span>
               <div style="display: inline-block">
                 <el-input v-model="taskName" placeholder="限制50个字符以内" maxlength="50" type="text" class="input" />
                 <br />
@@ -46,7 +47,7 @@
               </div>
             </div>
 
-            <div style="margin: 40px 0 0 40px">
+            <div class="form-row">
               <span class="span-d" style="vertical-align: top">任务描述：</span>
               <div style="width: 380px; display: inline-block">
                 <el-input
@@ -57,7 +58,7 @@
                   class="input"
                   rows="5"
                 />
-                <div style="margin: 30px 0 0 0; text-align: right">
+                <div class="action-area">
                   <el-button @click="backToTaskView" class="button-m">取消</el-button>
                   <el-button type="primary" color="#626aef" @click="checkName" class="button-m">下一步 </el-button>
                 </div>
@@ -70,13 +71,13 @@
       <!--    选择数据-->
       <div v-if="pageIndex === 1">
         <div style="padding: 20px 0 20px 0">
-          <div style="margin: 0 0 0 20px">
-            <div class="task-title-div"></div>
-            <span class="task-title-name">选择数据</span>
+          <div class="section-header">
+            <div class="section-line"></div>
+            <span class="section-title">选择数据</span>
           </div>
           <div style="margin: 0 0 0 60px">
             <div style="margin: 30px 0 0 40px; height: 40px">
-              <span class="span-d">* 选择数据集：</span>
+              <span class="span-d"><span style="color: red;font-weight: bold;">*</span> 选择数据集：</span>
               <div style="display: inline-block">
                 <el-select
                   v-model="dataSetValue"
@@ -106,7 +107,7 @@
             </div>
             <!--            选择数据表-->
             <div style="margin: 30px 0 0 40px; height: 40px">
-              <span class="span-d">* 选择数据表：</span>
+              <span class="span-d"><span style="color: red;font-weight: bold;">*</span> 选择数据表：</span>
               <div style="display: inline-block">
                 <el-select
                   v-model="dataSheetValue"
@@ -141,7 +142,7 @@
             </div>
             <!--            选择任务类型-->
             <div style="margin: 30px 0 0 40px; height: 40px">
-              <span class="span-d">* 任务类型：</span>
+              <span class="span-d"><span style="color: red;font-weight: bold;">*</span> 任务类型：</span>
               <div style="display: inline-block">
                 <el-select v-model="taskTypeValue" style="margin-left: 20px" @change="changeModelList" class="input">
                   <el-option v-for="item in taskType" :key="item.value" :label="item.label" :value="item.value" />
@@ -156,7 +157,7 @@
             </div>
             <!--            时间序列预测-->
             <div style="margin: 30px 0 0 40px; height: 40px" v-if="taskTypeValue === 'time_series_prediction'">
-              <span class="span-d">* 选择时间字段：</span>
+              <span class="span-d"><span style="color: red;font-weight: bold;">*</span> 选择时间字段：</span>
               <div style="display: inline-block">
                 <el-cascader
                   v-model="timeColValue"
@@ -175,7 +176,7 @@
             </div>
 
             <div style="margin: 30px 0 0 40px; height: 40px" v-if='taskTypeValue !== "named_entity_recognition"'>
-              <span class="span-d">* 选择目标字段：</span>
+              <span class="span-d"><span style="color: red;font-weight: bold;">*</span> 选择目标字段：</span>
               <div style="display: inline-block">
                 <!--            多数据表选择目标字段-->
                 <el-cascader
@@ -195,7 +196,7 @@
             </div>
 
             <div style="margin: 30px 0 0 40px" v-if='taskTypeValue !== "named_entity_recognition"'>
-              <span class="span-d" style="vertical-align: top">* 选择特征字段：</span>
+              <span class="span-d" style="vertical-align: top"><span style="color: red;font-weight: bold;">*</span> 选择特征字段：</span>
               <div style="display: inline-block; width: 380px">
                 <!--            多数据表选择特征字段-->
                 <el-cascader
@@ -237,14 +238,14 @@
       <!--    特征工程策略-->
       <div v-if="pageIndex === 2">
         <div style="padding: 20px 0 20px 0">
-          <div style="margin: 0 0 0 20px">
-            <div class="task-title-div"></div>
-            <span class="task-title-name">特征工程策略</span>
+          <div class="section-header">
+            <div class="section-line"></div>
+            <span class="section-title">特征工程策略</span>
           </div>
 
           <div style="margin: 0 0 0 40px">
             <div style="margin: 40px 0 0 40px">
-              <span class="span-m">* 记录处理：</span>
+              <span class="span-m"><span style="color: red;font-weight: bold;">*</span> 记录处理：</span>
               <el-radio-group v-model="rowValue" style="margin-left: 20px">
                 <el-radio label="1">使用全部记录</el-radio>
                 <el-radio label="2">使用部分记录</el-radio>
@@ -293,19 +294,20 @@
                   v-if="item.operator === '之间'"
                   class="input-a"
                 />
+                <!-- 优化加减按钮样式 -->
                 <el-button
                   v-if="item.index === 0"
                   type="primary"
                   :icon="CirclePlus"
-                  class="options"
+                  class="options add-button"
                   circle
                   @click="addColProcess"
                 />
                 <el-button
                   v-if="item.index !== 0"
-                  type="primary"
+                  type="danger"
                   :icon="Remove"
-                  class="options"
+                  class="options remove-button"
                   circle
                   @click="deleteColProcess"
                 />
@@ -313,7 +315,7 @@
             </div>
 
             <div style="margin: 30px 0 0 40px">
-              <span class="span-m">* 字段处理：</span>
+              <span class="span-m"><span style="color: red;font-weight: bold;">*</span> 字段处理：</span>
               <el-radio-group v-model="colValue" style="margin-left: 20px">
                 <el-radio label="1">所有字段使用相同配置</el-radio>
                 <el-radio label="2">逐字段分别配置</el-radio>
@@ -754,9 +756,9 @@
       <!--    预置模型-->
       <div v-if="pageIndex === 3">
         <div style="padding: 20px 0 20px 0">
-          <div style="margin: 0 0 0 20px">
-            <div class="task-title-div"></div>
-            <span class="task-title-name">预置模型</span>
+          <div class="section-header">
+            <div class="section-line"></div>
+            <span class="section-title">预置模型</span>
           </div>
 
           <div style="margin: 0 0 0 30px">
@@ -980,11 +982,11 @@
                     <el-table-column prop="description" label="说明" min-width="20%" align="center" />
                   </el-table>
                 </div>
-                <!--              网格搜索次数-->
-                <div style="margin: 15px 0 0 0; font-size: 14px">
-                  <span>当前配置下，网格搜索次数为：</span>
-                  <span>{{ this.computeNumString }}</span>
-                </div>
+                  <!-- 网格搜索次数显示区域 -->
+                  <div class="grid-search-info">
+                    <div class="grid-search-label">当前配置下，网格搜索次数为：</div>
+                    <div class="grid-search-value" :class="gridSearchClass">{{ this.computeNumString || '0' }}</div>
+                  </div>
                 <div style="margin: 30px 0 0 0; text-align: right">
                   <el-button @click="backToTaskView" class="button-m">取消</el-button>
                   <el-button type="primary" color="#626aef" @click="checkGridError(taskTypeValue === 'named_entity_recognition' ? 1 : 2)" class="button-m"
@@ -1003,9 +1005,9 @@
       <!--    其他参数配置-->
       <div v-if="pageIndex === 4">
         <div style="padding: 20px 0 20px 0">
-          <div style="margin: 0 0 0 20px">
-            <div class="task-title-div"></div>
-            <span class="task-title-name">其他参数配置</span>
+          <div class="section-header">
+            <div class="section-line"></div>
+            <span class="section-title">其他参数配置</span>
           </div>
           <div style="width: 50%; margin-left: 100px">
             <div style="margin: 40px 0 0 40px">
@@ -1079,8 +1081,10 @@
           </div>
         </div>
       </div>
+
     </div>
-  </div>
+
+
 </template>
 
 <script>
@@ -1435,69 +1439,6 @@ export default {
             });
           }
         });
-
-        //选的字段变化时更新单字段配置中的可选项。
-        // if (oldValue === '') {
-        //   this.columnsCascader.forEach((item, index) => {
-        //     if (item.label === newValue[0]) {
-        //       this.selectedSingleCol.push({
-        //         label: item.label, value: item.value, children: []
-        //       })
-        //       item.children.forEach((item1, index) => {
-        //         if (item1.label === newValue[1]) {
-        //           this.selectedSingleCol.forEach((item2, index2) => {
-        //             item2.children.push({
-        //               label: item1.label,
-        //               value: item1.label,
-        //               disabled: item1.disabled,
-        //               dataType: item1.dataType,
-        //               used: false,
-        //               colType: 'time',
-        //               options: [],
-        //               optionsName: []
-        //             })
-        //           })
-        //         }
-        //       })
-        //     }
-        //   })
-        //
-        //   console.log(this.selectedSingleCol, 'new this.SelectedSingleCol')
-        //   return;
-        // } else {
-        //   this.selectedSingleCol.forEach((item, index) => {
-        //     item.children.forEach((item1, index1) => {
-        //       if (item.label === oldValue[0] && item1.label === oldValue[1]) {
-        //         this.selectedSingleCol.splice(index, 1);
-        //         console.log(this.selectedSingleCol, "this.selectedsinglecol")
-        //       }
-        //     })
-        //   })
-        //   this.columnsCascader.forEach((item, index) => {
-        //     if (item.label === newValue[0]) {
-        //       this.selectedSingleCol.push({
-        //         label: item.label, value: item.value, children: []
-        //       })
-        //       item.children.forEach((item1, index) => {
-        //         if (item1.label === newValue[1]) {
-        //           this.selectedSingleCol.forEach((item2, index2) => {
-        //             item2.children.push({
-        //               label: item1.label,
-        //               value: item1.label,
-        //               disabled: item1.disabled,
-        //               dataType: item1.dataType,
-        //               used: false,
-        //               colType: 'time',
-        //               options: [],
-        //               optionsName: []
-        //             })
-        //           })
-        //         }
-        //       })
-        //     }
-        //   })
-        // }
-        // console.log(this.selectedSingleCol, 'new 2 this.SelectedSingleCol')
       },
       deep: true,
     },
@@ -1534,119 +1475,7 @@ export default {
         console.log(newValue, "newvalue in target");
         console.log(oldValue, "oldvalue in target");
         console.log(this.targetColValue, "targetcolvalue");
-        // console.log(this.selectedInPage1, 'this.selectedInPage1')
-        // if (oldValue === '') {
-        //   if (this.selectedSingleCol) {
-        //     console.log(this.selectedSingleCol, "this.selectedsinglecol")
-        //     this.selectedSingleCol.forEach((item1, index) => {
-        //       if (item1.label === newValue[0]) {
-        //         this.columnsCascader.forEach((item, index) => {
-        //           if (item.label === newValue[0]) {
-        //             item.children.forEach((item2, index2) => {
-        //               if (item2.label === newValue[1]) {
-        //                 item1.children.push({
-        //                   label: item2.label,
-        //                   value: item2.value,
-        //                   disabled: item2.disabled,
-        //                   dataType: item2.dataType,
-        //                   used: false,
-        //                   colType: 'target',
-        //                   options: [],
-        //                   optionsName: []
-        //                 })
-        //               }
-        //             })
-        //           }
-        //         })
-        //       } else {
-        //         this.selectedSingleCol.push({
-        //           label: newValue[0], value: newValue[0], children: []
-        //         })
-        //         this.columnsCascader.forEach((item, index) => {
-        //           if (item.label === newValue[0]) {
-        //             this.selectedSingleCol.forEach((item1, index1) => {
-        //               if (item1.label === item.label) {
-        //                 item.children.forEach((item2, index2) => {
-        //                   if (item2.label === newValue[1]) {
-        //                     item1.children.push({
-        //                       label: item2.label,
-        //                       value: item2.value,
-        //                       disabled: item2.disabled,
-        //                       dataType: item2.dataType,
-        //                       used: false,
-        //                       colType: 'target',
-        //                       options: [],
-        //                       optionsName: []
-        //                     })
-        //                   }
-        //                 })
-        //               }
-        //             })
-        //
-        //           }
-        //         })
-        //       }
-        //     })
-        //   } else {
-        //     // if (item.label === newValue[0]) {
-        //     //   this.selectedSingleCol.push({
-        //     //     label: item.label, value: item.value, children: []
-        //     //   })
-        //     //   item.children.forEach((item1, index) => {
-        //     //     if (item1.label === newValue[1]) {
-        //     //       this.selectedSingleCol.forEach((item2, index2) => {
-        //     //         item2.children.push({
-        //     //           label: item1.label,
-        //     //           value: item1.label,
-        //     //           disabled: item1.disabled,
-        //     //           dataType: item1.dataType,
-        //     //           used: false,
-        //     //           colType: 'target',
-        //     //           options: [],
-        //     //           optionsName: []
-        //     //         })
-        //     //       })
-        //     //     }
-        //     //   })
-        //     // }
-        //   }
-        //   console.log(this.selectedSingleCol, 'target this.SelectedSingleCol')
-        //   return;
-        // } else {
-        //   this.selectedSingleCol.forEach((item, index) => {
-        //     item.children.forEach((item1, index1) => {
-        //       if (item.label === oldValue[0] && item1.label === oldValue[1]) {
-        //         console.log(this.selectedSingleCol, "删之前 this.selectedsinglecol")
-        //         this.selectedSingleCol.splice(index, 1);
-        //         console.log(this.selectedSingleCol, "删之后this.selectedsinglecol")
-        //       }
-        //     })
-        //   })
-        //   this.columnsCascader.forEach((item, index) => {
-        //     if (item.label === newValue[0]) {
-        //       this.selectedSingleCol.push({
-        //         label: item.label, value: item.value, children: []
-        //       })
-        //       item.children.forEach((item1, index) => {
-        //         if (item1.label === newValue[1]) {
-        //           this.selectedSingleCol.forEach((item2, index2) => {
-        //             item2.children.push({
-        //               label: item1.label,
-        //               value: item1.label,
-        //               disabled: item1.disabled,
-        //               dataType: item1.dataType,
-        //               used: false,
-        //               colType: 'target',
-        //               options: [],
-        //               optionsName: []
-        //             })
-        //           })
-        //         }
-        //       })
-        //     }
-        //   })
-        // }
-        // console.log(this.selectedSingleCol, 'target this.SelectedSingleCol')
+
       },
       deep: true,
     },
@@ -1676,38 +1505,7 @@ export default {
             });
           });
         });
-        //选择的字段变化时更新单字段配置中的可选项。
-        // //多选框新增
-        // if (newValue.length > oldValue.length) {
-        //   let middle = newValue[newValue.length - 1];
-        //   this.userSelectedSingleCol.push({
-        //     label: middle,
-        //     dataType: this.columnsType[middle],
-        //     colType: 'feature',
-        //     used: false,
-        //     value: this.userSelectedSingleCol.length,
-        //     options: [],
-        //     optionsName: []
-        //   })
-        //   this.selectedInPage1.push(middle);
-        // }
-        // //多选框减少
-        // else {
-        //   oldValue.forEach((item, index) => {
-        //     if (!newValue.includes(item)) {
-        //       this.userSelectedSingleCol.forEach((op, j) => {
-        //         if (op.label === item) {
-        //           this.userSelectedSingleCol.splice(j, 1);
-        //         }
-        //       })
-        //       this.selectedInPage1.forEach((option, i) => {
-        //         if (option === item) {
-        //           this.selectedInPage1.splice(i, 1);
-        //         }
-        //       })
-        //     }
-        //   })
-        // }
+
       },
       deep: true,
     },
@@ -1803,7 +1601,37 @@ export default {
     },
   },
   created() {},
-  computed: {},
+  computed: {
+    // 其他计算属性...
+    
+    gridSearchClass() {
+      // 如果computeNumString为空或不是字符串，则返回默认样式
+      if (!this.computeNumString || typeof this.computeNumString !== 'string') {
+        return '';
+      }
+      
+      // 从计算结果字符串中提取最终数值
+      const parts = this.computeNumString.split('=');
+      if (parts.length < 2) {
+        // 如果没有等号，尝试直接解析
+        const num = parseInt(this.computeNumString.trim(), 10);
+        if (isNaN(num)) return '';
+        
+        if (num > 1000) return 'danger';
+        if (num > 200) return 'warning';
+        return '';
+      }
+      
+      // 正常情况：从"a×b×c=result"格式中提取result
+      const numStr = parts[parts.length - 1].trim();
+      const num = parseInt(numStr, 10);
+      
+      if (isNaN(num)) return '';
+      if (num > 1000) return 'danger';
+      if (num > 200) return 'warning';
+      return '';
+    }
+  },
   mounted() {
     this.loadUserData();
     this.computeNumOfGrid();
@@ -1887,41 +1715,7 @@ export default {
       }
     },
 
-    // //选择数据表时加载数据表中的字段(列)
-    // changeDataSheetIndex(param) {
-    //   this.tableColumns = [];
-    //
-    //   console.log(param, 'changeDataSheetIndex 中的参数')
-    //   //只有当选择数据表不为空时才调用接口去加载数据表对应的字段
-    //   if (param) {
-    //     //调用接口获取所选数据表中字段的类型
-    //     request.get("/datadetail", {//传给后端，请求数据
-    //       params: {
-    //         table_id: param,
-    //       }
-    //     }).then(res => {
-    //       if (res.code === '0') {
-    //         this.numericalList = [];
-    //         this.columnsType = {};
-    //         console.log(res.data, 'res.data in changeDataSheetIndex');
-    //         res.data.forEach((item, index) => {
-    //           let middle = {}
-    //           this.columnsType[item.fieldName] = item.dataType;
-    //           this.tableColumns.push({label: item.fieldName, value: index, dataType: item.dataType, options: []})
-    //           if (item.dataType === 'float8') {
-    //             this.numericalList.push(item.fieldName);
-    //           }
-    //         })
-    //         console.log(this.columnsType, 'this.columnsType')
-    //         console.log(this.tableColumns, '所选数据表中的字段');
-    //         console.log(this.numericalList, '数值型数据列表');
-    //         //在这里把数值型数据存起来以便于后续的校验
-    //
-    //       }
-    //     })
-    //   }
-    //
-    // },
+
 
     //目标字段的禁用
     disabledColumns() {
@@ -3247,6 +3041,39 @@ export default {
 </script>
 
 <style scoped>
+/* 添加和删除按钮优化样式 */
+.add-button {
+  background-color: #f0f7ff;
+  color: #4c75a3;
+  border-color: #4c75a3;
+  font-size: 18px;
+  vertical-align: middle;
+  margin-left: 10px;
+  transition: all 0.3s;
+}
+
+.add-button:hover {
+  background-color: #4c75a3;
+  color: white;
+  transform: scale(1.05);
+}
+
+.remove-button {
+  background-color: #fff1f0;
+  color: #f56c6c;
+  border-color: #f56c6c;
+  font-size: 18px;
+  vertical-align: middle;
+  margin-left: 10px;
+  transition: all 0.3s;
+}
+
+.remove-button:hover {
+  background-color: #f56c6c;
+  color: white;
+  transform: scale(1.05);
+}
+/* 基础容器样式 */
 :deep(.input-a input::-webkit-outer-spin-button),
 :deep(.input-a input::-webkit-inner-spin-button) {
   -webkit-appearance: none;
@@ -3258,41 +3085,168 @@ export default {
   appearance: textfield;
 }
 
-.input {
-  width: 360px;
-  margin-left: 20px;
-  text-align: left;
+/* 主容器样式 */
+div {
+  color: #303133;
+}
+
+/* 头部区域样式 */
+.header-area {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 30px;
+  background: linear-gradient(to right, #1a2942, #4c75a3);
+  border-radius: 8px;
+  color: white;
+  margin: 20px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+/* 网格搜索次数显示样式 */
+.grid-search-info {
+  margin: 20px 0;
+  padding: 15px;
+  background-color: #f8fafc;
+  border-radius: 6px;
+  border-left: 4px solid #4c75a3;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.grid-search-label {
+  font-size: 14px;
+  color: #606266;
+  margin-right: 10px;
+  font-weight: 500;
+}
+
+.grid-search-value {
+  font-size: 16px;
+  color: #1a2942;
+  font-weight: 600;
+  padding: 3px 10px;
+  background-color: rgba(76, 117, 163, 0.1);
+  border-radius: 4px;
+}
+
+/* 当搜索次数较大时的警告样式 */
+.grid-search-value.warning {
+  color: #e6a23c;
+  background-color: rgba(230, 162, 60, 0.1);
+}
+
+/* 当搜索次数过大时的警告样式 */
+.grid-search-value.danger {
+  color: #f56c6c;
+  background-color: rgba(245, 108, 108, 0.1);
+}
+/* 面包屑导航样式 */
+:deep(.el-breadcrumb__item) {
+  color: white !important;
+}
+
+:deep(.el-breadcrumb__inner) {
+  color: white !important;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+:deep(.el-breadcrumb__separator) {
+  color: white !important;
+}
+
+:deep(.el-breadcrumb__inner.is-link:hover) {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* 主内容区域 */
+.main-content-wrapper {
+  background-color: white;
+  margin: 0 20px 20px;
+  border-radius: 8px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
+  padding: 30px;
+  min-height: calc(100vh - 150px);
+}
+
+/* 步骤标题样式 */
+.section-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 30px;
+  border-bottom: 1px solid #ebeef5;
+  padding-bottom: 15px;
+}
+
+.section-line {
+  width: 4px;
+  height: 20px;
+  background-color: #4c75a3;
+  margin-right: 10px;
+  border-radius: 2px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a2942;
+}
+
+/* 步骤标题（旧版兼容） */
+.task-title-div {
+  width: 4px;
+  height: 20px;
+  background-color: #4c75a3;
+  margin-right: 10px;
+  display: inline-block;
+  vertical-align: middle;
+  border-radius: 2px;
+}
+
+.task-title-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a2942;
+  vertical-align: middle;
+}
+
+/* 表单区域样式 */
+.form-group {
+  margin-bottom: 25px;
+}
+
+.form-section {
+  background-color: #f8fafc;
+  border-radius: 8px;
+  padding: 25px;
+  margin-bottom: 30px;
+  border: 1px solid #ebeef5;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+}
+
+/* 表单标签样式 */
+.span-m, .span-d, .span-l, .span-f {
+  font-weight: 500;
+  color: #606266;
 }
 
 .span-m {
   display: inline-block;
   width: 120px;
   text-align: left;
-  /*vertical-align: middle;*/
 }
 
 .span-l {
   display: inline-block;
   width: 120px;
   text-align: left;
-  /*vertical-align: middle;*/
 }
 
 .span-f {
   display: inline-block;
   width: 120px;
   text-align: right;
-  /*vertical-align: middle;*/
-}
-
-.button-m {
-  width: 80px;
-}
-
-.number-input {
-  width: 200px;
-  margin-left: 20px;
-  text-align: left;
 }
 
 .span-d {
@@ -3302,27 +3256,319 @@ export default {
   vertical-align: top;
 }
 
+/* 输入框样式 */
+.input {
+  width: 360px;
+  margin-left: 20px;
+  text-align: left;
+}
+
+:deep(.el-input__inner) {
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+:deep(.el-input__inner:hover) {
+  border-color: #4c75a3;
+}
+
+:deep(.el-input__inner:focus) {
+  border-color: #1a2942;
+  box-shadow: 0 0 0 2px rgba(26, 41, 66, 0.2);
+}
+
+/* 数字输入框样式 */
+.number-input {
+  width: 200px;
+  margin-left: 20px;
+  text-align: left;
+}
+
+:deep(.el-input-number__decrease:hover),
+:deep(.el-input-number__increase:hover) {
+  color: #4c75a3;
+}
+
+/* 选择器样式 */
+:deep(.el-select:hover .el-input__inner) {
+  border-color: #4c75a3;
+}
+
+:deep(.el-select .el-input.is-focus .el-input__inner) {
+  border-color: #1a2942;
+}
+
+/* 表格样式 */
+:deep(.el-table) {
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+:deep(.el-table th) {
+  background-color: #f0f5fa !important;
+  color: #1a2942 !important;
+  font-weight: 600 !important;
+}
+
+:deep(.el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell) {
+  background-color: #f8fafc;
+}
+
+:deep(.el-table--enable-row-hover .el-table__body tr:hover > td.el-table__cell) {
+  background-color: #f0f7ff;
+}
+
+/* 按钮样式 */
+.button-m {
+  width: 80px;
+  border-radius: 4px;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+:deep(.el-button--primary) {
+  background: linear-gradient(to right, #1a2942, #4c75a3);
+  border: none;
+}
+
+:deep(.el-button--primary:hover) {
+  background: linear-gradient(to right, #15202f, #406690);
+  box-shadow: 0 4px 12px rgba(26, 41, 66, 0.2);
+  transform: translateY(-1px);
+}
+
+:deep(.el-button--default:hover) {
+  border-color: #4c75a3;
+  color: #4c75a3;
+  transform: translateY(-1px);
+}
+
+/* 操作按钮区域 */
+.action-area {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 30px;
+}
+
+/* 卡片样式 */
+.card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid #ebeef5;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+}
+
+/* 添加和删除按钮样式 */
 .options {
   font-size: 18px;
   background-color: white;
-  color: black;
-  border-color: white;
+  color: #4c75a3;
+  border-color: #e4e7ed;
   vertical-align: middle;
   margin-left: 10px;
+  transition: all 0.3s;
 }
 
+.options:hover {
+  color: #1a2942;
+  background-color: #f0f5fa;
+  border-color: #c6e2ff;
+}
+
+/* 折叠面板样式 */
 .collapsefont {
   --el-collapse-header-font-size: 15px !important;
   --el-collapse-content-font-size: 15px !important;
 }
 
+:deep(.el-collapse-item__header) {
+  background-color: #f8fafc;
+  font-weight: 500;
+  color: #1a2942;
+}
+
+:deep(.el-collapse-item__header:hover) {
+  background-color: #f0f5fa;
+}
+
+:deep(.el-collapse-item__wrap) {
+  border-radius: 0 0 4px 4px;
+}
+
+/* 工具提示样式 */
 .tooltip {
   float: right;
   margin-right: 110px;
   margin-top: 5px;
 }
-/* 鼠标悬浮表格样式 */
-:deep(.el-table--enable-row-hover .el-table__body tr:hover>td.el-table__cell){
-  background-color: rgba(137, 147, 152, 0.15);
+
+:deep(.el-tooltip__trigger) {
+  cursor: help;
+}
+
+/* 表单分组 */
+.form-row {
+  margin-bottom: 20px;
+  display: flex;
+  align-items: flex-start;
+}
+
+.form-field {
+  display: inline-block;
+  margin-left: 20px;
+}
+
+/* 单选和复选框组样式 */
+:deep(.el-radio), :deep(.el-checkbox) {
+  margin-right: 20px;
+  font-weight: normal;
+}
+
+:deep(.el-radio__input.is-checked .el-radio__inner),
+:deep(.el-checkbox__input.is-checked .el-checkbox__inner) {
+  background-color: #4c75a3;
+  border-color: #4c75a3;
+}
+
+:deep(.el-radio__input.is-checked + .el-radio__label),
+:deep(.el-checkbox__input.is-checked + .el-checkbox__label) {
+  color: #4c75a3;
+}
+
+/* 标签与内容的间距 */
+.label-content-gap {
+  margin-left: 20px;
+}
+
+/* 步骤指示器 */
+.step-indicator {
+  display: flex;
+  margin-bottom: 30px;
+  justify-content: space-between;
+  position: relative;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.step-indicator::before {
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #e4e7ed;
+  z-index: 0;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.step-number {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #f0f5fa;
+  border: 2px solid #4c75a3;
+  color: #4c75a3;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.step-active .step-number {
+  background-color: #4c75a3;
+  color: white;
+}
+
+.step-label {
+  font-size: 14px;
+  color: #606266;
+}
+
+.step-active .step-label {
+  color: #4c75a3;
+  font-weight: 500;
+}
+
+/* 错误提示 */
+.error-text {
+  color: #f56c6c;
+  font-size: 14px;
+  margin-top: 10px;
+  margin-left: 20px;
+}
+
+/* 信息提示 */
+.info-text {
+  color: #909399;
+  font-size: 13px;
+  margin-top: 5px;
+  margin-left: 20px;
+}
+
+/* 嵌套表格配置区域 */
+.parameter-section {
+  background-color: #f8fafc;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.parameter-header {
+  background-color: #f0f5fa;
+  padding: 15px 20px;
+  border-bottom: 1px solid #e4e7ed;
+  font-weight: 500;
+  color: #1a2942;
+}
+
+.parameter-content {
+  padding: 15px 20px;
+}
+
+/* 弹窗样式 */
+:deep(.el-dialog) {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+:deep(.el-dialog__header) {
+  background: linear-gradient(to right, #1a2942, #4c75a3);
+  padding: 16px 20px;
+  margin-right: 0;
+  border-bottom: 1px solid #eaeaea;
+}
+
+:deep(.el-dialog__title) {
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+:deep(.el-dialog__headerbtn .el-dialog__close) {
+  color: white;
+}
+
+:deep(.el-dialog__body) {
+  padding: 24px 30px;
+}
+
+:deep(.el-dialog__footer) {
+  padding: 12px 30px 20px;
+  border-top: 1px solid #f0f0f0;
+  background-color: #fbfbfb;
 }
 </style>
