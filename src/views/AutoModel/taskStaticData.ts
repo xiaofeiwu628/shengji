@@ -1,3 +1,5 @@
+//后续需要加类型声明
+
 //MLP的配置参数
 export const parameterTableMlp = [
     {

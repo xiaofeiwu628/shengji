@@ -46,26 +46,22 @@
     <!-- 特色功能区域 -->
     <section class="features-section" ref="featuresSection">
       <h2 class="section-title">平台特色</h2>
-      
       <div class="features-grid">
         <div class="feature-card">
           <el-icon class="feature-icon"><DataAnalysis /></el-icon>
           <h3>模型训练</h3>
           <p>通过简单的配置，快速训练和调优AI模型，支持分类、回归、时间序列预测等多种任务类型</p>
         </div>
-        
         <div class="feature-card">
           <el-icon class="feature-icon"><Monitor /></el-icon>
           <h3>服务部署</h3>
           <p>一键将AI模型部署为在线服务，提供稳定、高性能的推理能力，实时监控服务状态</p>
         </div>
-        
         <div class="feature-card">
           <el-icon class="feature-icon"><Box /></el-icon>
           <h3>模型管理</h3>
           <p>集中管理和版本控制您的AI模型，支持公开分享，方便团队协作和模型迭代</p>
         </div>
-        
         <div class="feature-card">
           <el-icon class="feature-icon"><Files /></el-icon>
           <h3>数据处理</h3>
@@ -77,38 +73,32 @@
     <!-- 快速访问区域 -->
     <section class="quick-access-section">
       <h2 class="section-title">快速访问</h2>
-      
       <div class="access-cards">
         <div class="access-card" @click="navigateTo('modelList')">
           <el-icon class="access-icon"><Box /></el-icon>
           <h3>模型库</h3>
           <p>管理和使用您的AI模型</p>
         </div>
-        
         <div class="access-card" @click="navigateTo('imageList')">
           <el-icon class="access-icon"><Picture /></el-icon>
           <h3>镜像仓库</h3>
           <p>管理和部署容器镜像</p>
         </div>
-        
         <div class="access-card" @click="navigateTo('datascreen')">
           <el-icon class="access-icon"><Files /></el-icon>
           <h3>数据集管理</h3>
           <p>上传和组织训练数据</p>
         </div>
-        
         <div class="access-card" @click="navigateTo('taskView')">
           <el-icon class="access-icon"><List /></el-icon>
           <h3>任务管理</h3>
           <p>监控和管理训练任务</p>
         </div>
-        
         <div class="access-card" @click="navigateTo('onlineServiceList')">
           <el-icon class="access-icon"><Monitor /></el-icon>
           <h3>在线服务</h3>
           <p>部署和监控AI服务</p>
         </div>
-        
         <div class="access-card" @click="navigateTo('taskCreate')">
           <el-icon class="access-icon"><Plus /></el-icon>
           <h3>创建任务</h3>
@@ -119,94 +109,74 @@
   </div>
 </template>
 
-<script>
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { ArrowRight, ArrowDown, DataAnalysis, Monitor, Box, 
-         Files, Picture, List, Plus } from '@element-plus/icons-vue';
-import request from '@/utils/request';
+<script lang="ts" setup>
+import { ref, onMounted, Ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { ArrowRight, ArrowDown, DataAnalysis, Monitor, Box, Files, Picture, List, Plus } from '@element-plus/icons-vue'
+import request from '@/utils/request'
+// 定义统计数据的接口
+interface Stats {
+  models: number // 模型数量
+  services: number  // 服务数量
+  datasets: number // 数据集数量
+  tasks: number   // 任务数量
+}
+// 引入路由
+const router = useRouter()
+const featuresSection = ref<HTMLElement | null>(null)
+const stats = ref<Stats>({
+  models: 0,
+  services: 0,
+  datasets: 0,
+  tasks: 0
+})
+// 统计数据加载函数
+const loadStats = async () => {
+  try {
+    // 模型总数
+    const modelRes = await request.get('/ModelRepository/GetModelList')
+    stats.value.models = modelRes.data ? modelRes.data.length : 0
 
-export default {
-  name: "Home",
-  components: {
-    ArrowRight, 
-    ArrowDown,
-    DataAnalysis,
-    Monitor,
-    Box,
-    Files,
-    Picture,
-    List,
-    Plus
-  },
-  setup() {
-    const router = useRouter();
-    const featuresSection = ref(null);
-    
-    // 统计数据
-    const stats = ref({
-      models: 0,
-      services: 0,
-      datasets: 0,
-      tasks: 0
-    });
-    
-    // 加载统计数据
-    const loadStats = async () => {
-      try {
-        // 从实际API加载数据
-        // 模型总数
-        const modelRes = await request.get('/ModelRepository/GetModelList');
-        stats.value.models = modelRes.data ? modelRes.data.length : 0;
-        
-        // 服务总数
-        const serviceRes = await request.get('/OnlineService/GetOnlineServiceList');
-        stats.value.services = serviceRes.data ? serviceRes.data.length : 0;
-        
-        // 数据集总数
-        const datasetRes = await request.get('/data/search');
-        stats.value.datasets = datasetRes.data ? datasetRes.data.length : 0;
-        
-        // 任务总数
-        const taskRes = await request.get('/AutoModel/SearchTasks');
-        stats.value.tasks = taskRes.data ? taskRes.data.length : 0;
-      } catch (error) {
-        console.error("统计数据加载失败", error);
-        // 加载失败时使用默认数据
-        stats.value = {
-          models: 24,
-          services: 18,
-          datasets: 36,
-          tasks: 42
-        };
-      }
-    };
-    
-    const navigateTo = (route) => {
-      router.push(`/${route}`);
-    };
-    
-    const scrollToFeatures = () => {
-      if (featuresSection.value) {
-        featuresSection.value.scrollIntoView({ behavior: 'smooth' });
-      }
-    };
-    
-    onMounted(() => {
-      loadStats();
-    });
-    
-    return {
-      stats,
-      navigateTo,
-      scrollToFeatures,
-      featuresSection
-    };
+    // 服务总数
+    const serviceRes = await request.get('/OnlineService/GetOnlineServiceList')
+    stats.value.services = serviceRes.data ? serviceRes.data.length : 0
+
+    // 数据集总数
+    const datasetRes = await request.get('/data/search')
+    stats.value.datasets = datasetRes.data ? datasetRes.data.length : 0
+
+    // 任务总数
+    const taskRes = await request.get('/AutoModel/SearchTasks')
+    stats.value.tasks = taskRes.data ? taskRes.data.length : 0
+  } catch (error) {
+    console.error("统计数据加载失败", error)
+    // 加载失败时使用默认数据
+    stats.value = {
+      models: 24,
+      services: 18,
+      datasets: 36,
+      tasks: 42
+    }
   }
 }
+// 路由跳转函数
+function navigateTo(route: string) {
+  router.push(`/${route}`)
+}
+// 滚动到特色功能区域
+function scrollToFeatures() {
+  if (featuresSection.value) {
+    featuresSection.value.scrollIntoView({ behavior: 'smooth' })
+  }
+}
+// 组件挂载后加载统计数据
+onMounted(() => {
+  loadStats()
+})
 </script>
 
 <style scoped>
+/* 首页容器样式 */
 .home-container {
   width: 100%;
   min-height: calc(100vh - 60px);

@@ -1090,6 +1090,7 @@ import { ArrowRight, CirclePlus, QuestionFilled, Remove } from "@element-plus/ic
 import router from "@/router";
 import { useRoute } from "vue-router";
 import { ref } from "vue";
+import { useMainStore } from "@/store/index"; // 引入 Pinia store
 import {
   dictionaryC2E,
   dictionaryE2C,
@@ -1708,9 +1709,7 @@ export default {
     }, 1000);
   },
   computed: {
-    token: function() {
-      return this.$store.getters.getToken;
-    },
+
   },
   mounted() {
     this.loadUserData();
@@ -2037,8 +2036,10 @@ export default {
       this.modifyTaskInfo["task_desc"] = this.taskDescription;
       this.modifyTaskInfo["type"] = this.modifyTaskType;
       this.modifyTaskInfo["configuration"] = this.middleData;
+      // 使用 Pinia 获取 token
+      const mainStore = useMainStore();
       let headers = {
-        headers: { token: this.token },
+        headers: { token: mainStore.getToken },
       };
       taskModify(this.modifyTaskInfo, headers)
         .then(res => {
@@ -3347,8 +3348,10 @@ export default {
       this.taskInfo["configuration"] = this.middleData;
       console.log(this.taskInfo);
       console.log(this.token, "this.token");
+      // 使用 Pinia 获取 token
+      const mainStore = useMainStore();
       let headers = {
-        headers: { token: this.token },
+        headers: { token: mainStore.getToken },
       };
       taskAdd(this.taskInfo, headers)
         .then(res => {

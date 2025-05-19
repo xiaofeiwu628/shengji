@@ -17,7 +17,7 @@ module.exports = defineConfig({
     // 客户端配置：禁用运行时错误覆盖层
     client: { overlay: { runtimeErrors: false } },
     
-    // 设置开发服务器端口为9876
+    // 设置开发服务器端口为9877
     port: 9877,
 
     // 代理配置（解决跨域问题）

@@ -35,18 +35,17 @@
       <div class="form-container">
         <h2 class="form-title">创建新账号</h2>
         <p class="form-subtitle">填写以下信息完成注册</p>
-        
-        <el-form 
+        <el-form
           :model="formRegister"
           :rules="rules"
-          ref="formRegister"
+          ref="formRegisterRef"
           class="register-form"
         >
           <el-form-item prop="Username">
-            <el-input 
-              v-model="formRegister.Username" 
-              placeholder="设置账号名称" 
-              autocomplete="off" 
+            <el-input
+              v-model="formRegister.Username"
+              placeholder="设置账号名称"
+              autocomplete="off"
               size="large"
             >
               <template #prefix>
@@ -55,14 +54,14 @@
             </el-input>
             <div class="input-hint">账号将用于登录系统</div>
           </el-form-item>
-          
+
           <el-form-item prop="Password">
-            <el-input 
-              type="password" 
-              v-model="formRegister.Password" 
-              placeholder="设置密码" 
-              autocomplete="off" 
-              show-password 
+            <el-input
+              type="password"
+              v-model="formRegister.Password"
+              placeholder="设置密码"
+              autocomplete="off"
+              show-password
               size="large"
             >
               <template #prefix>
@@ -71,14 +70,14 @@
             </el-input>
             <div class="input-hint">密码最少6位数</div>
           </el-form-item>
-          
+
           <el-form-item prop="confirm">
-            <el-input 
-              type="password" 
-              v-model="formRegister.confirm" 
-              placeholder="确认密码" 
-              autocomplete="off" 
-              show-password 
+            <el-input
+              type="password"
+              v-model="formRegister.confirm"
+              placeholder="确认密码"
+              autocomplete="off"
+              show-password
               size="large"
             >
               <template #prefix>
@@ -86,35 +85,34 @@
               </template>
             </el-input>
           </el-form-item>
-          
+
           <el-form-item prop="code">
             <div class="captcha-container">
-              <el-input 
-                v-model="formRegister.code" 
-                auto-complete="off" 
-                placeholder="请输入验证码" 
+              <el-input
+                v-model="formRegister.code"
+                auto-complete="off"
+                placeholder="请输入验证码"
                 size="large"
                 class="captcha-input"
               ></el-input>
-              
               <div class="captcha-box" @click="refreshCode">
                 <s-identify :identifyCode="identifyCode"></s-identify>
               </div>
             </div>
             <div class="captcha-hint">点击图片可刷新验证码</div>
           </el-form-item>
-          
+
           <el-form-item>
-            <el-button 
-              type="primary" 
-              class="submit-btn" 
+            <el-button
+              type="primary"
+              class="submit-btn"
               @click="submit"
               :loading="isLoading"
             >
               立即注册
             </el-button>
           </el-form-item>
-          
+
           <div class="form-footer">
             <span>已有账号？</span>
             <el-link type="primary" @click="toLogin">返回登录</el-link>
@@ -125,155 +123,137 @@
   </div>
 </template>
 
-<script>
-import SIdentify from "../components/Identify";
-import { useRouter } from "vue-router";
-import request from "@/utils/request";
-import { User, Lock, Monitor, Key, Avatar, Trophy } from "@element-plus/icons-vue";
-import { ref } from 'vue';
-import { ElMessage } from "element-plus";
+<script lang="ts" setup>
+import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage, FormInstance, FormRules } from 'element-plus'
+import SIdentify from "@/components/Identify.vue"
+import request from "@/utils/request"
 
-export default {
-  name: 'register',
-  components: {
-    SIdentify,
-    User,
-    Lock,
-    Monitor,
-    Key,
-    Avatar,
-    Trophy
-  },
-  mounted() {
-    // 初始化验证码
-    this.identifyCode = '';
-    this.makeCode(this.identifyCodes, 4);
-  },
-  setup() {
-    const router = useRouter();
-    const isLoading = ref(false);
-    
-    const toLogin = () => {
-      router.push({
-        path: '/login',
-      });
-    };
-    
-    return {
-      toLogin,
-      isLoading
-    };
-  },
-  data() {
-    return {
-      formRegister: {
-        Username: "",
-        Password: "",
-        confirm: "",
-        code: ""
+
+interface RegisterForm {// 定义注册表单的类型
+  Username: string
+  Password: string
+  confirm: string
+  code: string
+}
+
+const router = useRouter()
+const isLoading = ref(false)
+const formRegister = reactive<RegisterForm>({// 定义注册表单的响应式数据
+  Username: "",
+  Password: "",
+  confirm: "",
+  code: ""
+})
+const formRegisterRef = ref<FormInstance>()// 获取表单实例
+const identifyCodes = '1234567890abcdefjhijklinopqrsduvwxyz'// 验证码字符集
+const identifyCode = ref('')
+const rules: FormRules = {// 定义表单验证规则
+  Username: [
+    { required: true, message: "请输入用户名", trigger: "blur" },
+    { min: 3, message: "用户名至少需要3个字符", trigger: "blur" }
+  ],
+  Password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, message: '密码最少6位数', trigger: 'blur' }
+  ],
+  confirm: [
+    { required: true, message: '请再次确认密码', trigger: 'blur' },
+    {
+      validator: (rule: any, value: string, callback: (error?: Error) => void) => {
+        if (value !== formRegister.Password) {
+          callback(new Error('两次输入的密码不一致!'))
+        } else {
+          callback()
+        }
       },
-      identifyCodes: '1234567890abcdefjhijklinopqrsduvwxyz',
-      identifyCode: '',
-      rules: {
-        Username: [
-          { required: true, message: "请输入用户名", trigger: "blur" },
-          { min: 3, message: "用户名至少需要3个字符", trigger: "blur" }
-        ],
-        Password: [
-          { required: true, message: '请输入密码', trigger: 'blur' },
-          { min: 6, message: '密码最少6位数', trigger: 'blur' }
-        ],
-        confirm: [
-          { required: true, message: '请再次确认密码', trigger: 'blur' },
-          {
-            validator: (rule, value, callback) => {
-              if (value !== this.formRegister.Password) {
-                callback(new Error('两次输入的密码不一致!'));
-              } else {
-                callback();
-              }
-            },
-            trigger: 'blur'
-          }
-        ],
-        code: [{ required: true, message: "请输入验证码", trigger: "blur" }]
-      }
-    };
-  },
-  methods: {
-    refreshCode() {
-      this.identifyCode = '';
-      this.makeCode(this.identifyCodes, 4);
-    },
-    makeCode(o, l) {
-      for (let i = 0; i < l; i++) {
-        this.identifyCode += this.identifyCodes[this.randomNum(0, this.identifyCodes.length)];
-      }
-    },
-    randomNum(min, max) {
-      return Math.floor(Math.random() * (max - min) + min);
-    },
-    submit() {
-      if (this.formRegister.code.toLowerCase() !== this.identifyCode.toLowerCase()) {
-        ElMessage({
-          message: '请填写正确验证码',
-          type: 'error',
-          offset: 60
-        });
-        this.refreshCode();
-        return;
-      }
-      
-      if (this.formRegister.Password !== this.formRegister.confirm) {
-        ElMessage({
-          message: '两次密码输入不一致！',
-          type: 'error',
-          offset: 60
-        });
-        return;
-      }
-      
-      this.$refs.formRegister.validate((valid) => {
-        if (valid) {
-          this.isLoading = true;
-          
-          request.post("/UserLogin/Register", {
-            Username: this.formRegister.Username,
-            Password: this.formRegister.Password,
-          }, { headers: { 'Content-Type': 'multipart/form-data' } })
-          .then(res => {
-            if (res.code === '0') {
-              ElMessage({
-                type: "success",
-                message: '注册成功！即将跳转到登录页面...',
-                offset: 60
-              });
-              
-              setTimeout(() => {
-                this.toLogin();
-              }, 1500);
-            } else {
-              ElMessage({
-                type: "error",
-                message: res.msg || '注册失败，请稍后重试',
-                offset: 60
-              });
-            }
-            this.isLoading = false;
-          })
-          .catch(err => {
+      trigger: 'blur'
+    }
+  ],
+  code: [{ required: true, message: "请输入验证码", trigger: "blur" }]
+}
+
+function randomNum(min: number, max: number) {
+  return Math.floor(Math.random() * (max - min) + min)
+}
+
+function makeCode(o: string, l: number) {// 生成验证码
+  let code = ''
+  for (let i = 0; i < l; i++) {
+    code += o[randomNum(0, o.length)]
+  }
+  identifyCode.value = code
+}
+
+function refreshCode() {// 刷新验证码
+  makeCode(identifyCodes, 4)
+}
+
+function toLogin() {// 跳转到登录页面
+  router.push({ path: '/login' })
+}
+
+function submit() {// 提交注册表单
+  if (formRegister.code.toLowerCase() !== identifyCode.value.toLowerCase()) {
+    ElMessage({
+      message: '请填写正确验证码',
+      type: 'error',
+      offset: 60
+    })
+    refreshCode()
+    return
+  }
+  if (formRegister.Password !== formRegister.confirm) {// 密码不一致
+    ElMessage({
+      message: '两次密码输入不一致！',
+      type: 'error',
+      offset: 60
+    })
+    return
+  }
+  formRegisterRef.value?.validate((valid: boolean) => {// 表单验证
+    if (valid) {
+      isLoading.value = true
+      request.post("/UserLogin/Register", {
+        Username: formRegister.Username,
+        Password: formRegister.Password,
+      }, { headers: { 'Content-Type': 'multipart/form-data' } })
+        .then((res: any) => {
+          if (res.code === '0') {
+            ElMessage({
+              type: "success",
+              message: '注册成功！即将跳转到登录页面...',
+              offset: 60
+            })
+            setTimeout(() => {
+              toLogin()
+            }, 1500)
+          } else {
             ElMessage({
               type: "error",
-              message: '网络错误，请稍后重试',
+              message: res.msg || '注册失败，请稍后重试',
               offset: 60
-            });
-            this.isLoading = false;
-          });
-        }
-      });
+            })
+          }
+          isLoading.value = false
+        })
+        .catch(() => {
+          ElMessage({
+            type: "error",
+            message: '网络错误，请稍后重试',
+            offset: 60
+          })
+          isLoading.value = false
+        })
     }
-  }
-};
+  })
+}
+
+onMounted(() => {// 页面加载时生成验证码
+  identifyCode.value = ''
+  makeCode(identifyCodes, 4)
+})
 </script>
 
 <style scoped>

@@ -35,11 +35,10 @@
       <div class="form-container">
         <h2 class="form-title">欢迎登录</h2>
         <p class="form-subtitle">请输入您的账号信息</p>
-        
         <el-form 
           :model="formLogin"
           :rules="rules"
-          ref="formLogin"
+          ref="formLoginRef"
           class="login-form"
         >
           <el-form-item prop="Username">
@@ -55,7 +54,6 @@
               </template>
             </el-input>
           </el-form-item>
-          
           <el-form-item prop="Password">
             <el-input 
               type="password" 
@@ -71,7 +69,6 @@
               </template>
             </el-input>
           </el-form-item>
-          
           <el-form-item prop="code">
             <div class="captcha-container">
               <el-input 
@@ -82,18 +79,15 @@
                 size="large"
                 class="captcha-input"
               ></el-input>
-              
               <div class="captcha-box" @click="refreshCode">
                 <s-identify :identifyCode="identifyCode"></s-identify>
               </div>
             </div>
           </el-form-item>
-          
           <div class="form-options">
             <el-checkbox v-model="rememberMe">记住我</el-checkbox>
             <el-link type="primary" class="forgot-password">忘记密码？</el-link>
           </div>
-          
           <el-button 
             type="primary" 
             class="submit-btn" 
@@ -102,7 +96,6 @@
           >
             登录
           </el-button>
-          
           <div class="form-footer">
             <span>还没有账号？</span>
             <el-link type="primary" @click="toRegister">立即注册</el-link>
@@ -113,135 +106,124 @@
   </div>
 </template>
 
-<script>
-import SIdentify from "../components/Identify";
-import {useRouter} from "vue-router/dist/vue-router";
-import request from "@/utils/request";
-import { User, Lock, Monitor, Box, Cpu, Connection } from "@element-plus/icons-vue";
+<script lang="ts" setup>
+import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import SIdentify from "@/components/Identify.vue"
+import request from "@/utils/request"
 
-export default {
-  name: 'login',
-  components: {
-    SIdentify,
-    User,
-    Lock,
-    Monitor,
-    Box,
-    Cpu,
-    Connection
-  },
-  mounted () {
-    // 初始化验证码
-    this.identifyCode = ''
-    this.makeCode(this.identifyCodes, 4)
-  },
-  data: function() {
-    return {
-      formLogin: {
-        Username: "",
-        Password: "",
-        code: ""
-      },
-      rememberMe: false,
-      isLoading: false,
-      identifyCodes: '1234567890abcdefjhijklinopqrsduvwxyz',//随机串内容
-      identifyCode: '',
-      // 校验
-      rules: {
-        Username: [{ required: true, message: "请输入用户名", trigger: "blur" }],
-        Password: [{ required: true, message: "请输入密码", trigger: "blur" }],
-        code: [{ required: true, message: "请输入验证码", trigger: "blur" }]
-      }
-    }
-  },
-  setup(){
-    const router = useRouter()
-    let toHome = ()=>{//返回home界面
-      router.push({
-        path: '/',
-      })
-    };
-    let toRegister = ()=>{//返回注册界面
-      router.push({
-        path: '/register',
-      })
-    };
-    return{
-      toHome,
-      toRegister
-    }
-  },
-  methods: {
-    // 重置验证码
-    refreshCode () {
-      this.identifyCode = ''
-      this.makeCode(this.identifyCodes, 4)
-    },
-    makeCode (o, l) {
-      for (let i = 0; i < l; i++) {
-        this.identifyCode += this.identifyCodes[this.randomNum(0, this.identifyCodes.length)]
-      }
-    },
-    randomNum (min, max) {
-      return Math.floor(Math.random() * (max - min) + min)
-    },
-    submit() {//点击登录按钮
-      this.isLoading = true;
-      
-      if (this.formLogin.code.toLowerCase() !== this.identifyCode.toLowerCase()) {
-        this.$message.error('请填写正确验证码')
-        this.refreshCode()
-        this.isLoading = false;
-        return
-      }
-      
-      this.$refs.formLogin.validate((valid)=>{//触发表单验证
-        if(valid){
-          request.post("/UserLogin/Login", {
-            Username : this.formLogin.Username,
-            Password : this.formLogin.Password,
-          },{headers:{'Content-Type':'multipart/form-data'}}).then(res =>{
-            if(res.code === '0'){
-              this.$message({
-                type: "success",
-                message: '登录成功！',
-                offset:60
-              })
-              console.log(res.data.Token)
-              //保存token
-              window.localStorage.setItem('token',res.data.Token);
-              localStorage.setItem("Token",res.data.Token);//存储token
-              localStorage.setItem("Username",res.data.Username);//存储Username
-              this.toHome();
-            } else {
-              this.$message({
-                type: "error",
-                message: res.msg,
-                offset:60
-              })
-            }
-            this.isLoading = false;
-          }).catch(err => {
-            this.isLoading = false;
-            this.$message({
-              type: "error",
-              message: '网络错误，请稍后重试',
-              offset:60
-            })
-          })
-        }
-        else {
-          this.$message({
-            type:'error',
-            message:'登录失败！',
-            offset:60
-          })
-          this.isLoading = false;
-        }
-      })
-    }
-  }
+
+interface LoginForm {// 定义登录表单的类型
+  Username: string
+  Password: string
+  code: string
 }
+
+const router = useRouter()// 获取路由实例
+
+const formLogin = reactive<LoginForm>({// 定义登录表单的响应式数据
+  Username: "",
+  Password: "",
+  code: ""
+})
+
+const rememberMe = ref(false)// 记住我
+const isLoading = ref(false)// 加载状态
+const identifyCodes = '1234567890abcdefjhijklinopqrsduvwxyz'// 验证码字符集
+const identifyCode = ref('')// 验证码
+const formLoginRef = ref()// 表单引用
+
+const rules = {// 定义表单验证规则
+  Username: [{ required: true, message: "请输入用户名", trigger: "blur" }],// 用户名
+  Password: [{ required: true, message: "请输入密码", trigger: "blur" }],// 密码
+  code: [{ required: true, message: "请输入验证码", trigger: "blur" }]// 验证码
+}
+
+function randomNum(min: number, max: number) {// 生成随机数
+  return Math.floor(Math.random() * (max - min) + min)
+}
+
+function makeCode(o: string, l: number) {// 生成验证码
+  let code = ''
+  for (let i = 0; i < l; i++) {
+    code += o[randomNum(0, o.length)]
+  }
+  identifyCode.value = code
+}
+// 刷新验证码
+function refreshCode() {
+  makeCode(identifyCodes, 4)
+}
+
+function toHome() {// 跳转到首页
+  router.push({ path: '/' })
+}
+
+function toRegister() {// 跳转到注册页面
+  router.push({ path: '/register' })
+}
+
+function submit() {// 提交表单
+  // 表单验证
+  isLoading.value = true
+
+  if (formLogin.code.toLowerCase() !== identifyCode.value.toLowerCase()) {// 验证码验证
+    ElMessage.error('请填写正确验证码')
+    refreshCode()
+    isLoading.value = false
+    return
+  }
+
+  (formLoginRef.value as any).validate((valid: boolean) => {// 表单验证
+    if (valid) {// 表单验证成功
+      request.post("/UserLogin/Login", {// 登录请求
+        Username: formLogin.Username,
+        Password: formLogin.Password,
+      }, { headers: { 'Content-Type': 'multipart/form-data' } }).then((res: any) => {
+        if (res.code === '0') {
+          ElMessage({
+            type: "success",
+            message: '登录成功！',
+            offset: 60
+          })
+          //保存token
+          window.localStorage.setItem('token', res.data.Token)
+          localStorage.setItem("Token", res.data.Token)
+          localStorage.setItem("Username", res.data.Username)
+          toHome()
+        } else {
+          ElMessage({
+            type: "error",
+            message: res.msg,
+            offset: 60
+          })
+        }
+        isLoading.value = false
+      }).catch(() => {
+        isLoading.value = false
+        ElMessage({
+          type: "error",
+          message: '网络错误，请稍后重试',
+          offset: 60
+        })
+      })
+    } else {
+      ElMessage({// 这里是表单验证失败的处理
+        type: 'error',
+        message: '登录失败！',
+        offset: 60
+      })
+      isLoading.value = false
+    }
+  })
+}
+
+// 监听键盘事件
+onMounted(() => {
+  identifyCode.value = ''// 初始化验证码
+  makeCode(identifyCodes, 4)// 生成验证码
+})
 </script>
 
 <style scoped>
