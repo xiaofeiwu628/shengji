@@ -57,10 +57,10 @@
             <div class="log-title">服务运行日志</div>
             <div class="log-actions">
               <el-tooltip content="清空日志" placement="top">
-                <el-button size="small" icon="Delete" circle @click="clearLogs('serviceMessages')"></el-button>
+                <el-button size="small" :icon="Delete" circle @click="clearLogs('serviceMessages')"></el-button>
               </el-tooltip>
               <el-tooltip content="滚动到底部" placement="top">
-                <el-button size="small" icon="Bottom" circle @click="scrollToBottom('serviceMessages')"></el-button>
+                <el-button size="small" :icon="Bottom" circle @click="scrollToBottom('serviceMessages')"></el-button>
               </el-tooltip>
             </div>
           </div>
@@ -78,10 +78,10 @@
             <div class="log-title">容器内部日志</div>
             <div class="log-actions">
               <el-tooltip content="清空日志" placement="top">
-                <el-button size="small" icon="Delete" circle @click="clearLogs('containerMessage')"></el-button>
+                <el-button size="small" :icon="Delete" circle @click="clearLogs('containerMessage')"></el-button>
               </el-tooltip>
               <el-tooltip content="滚动到底部" placement="top">
-                <el-button size="small" icon="Bottom" circle @click="scrollToBottom('containerMessage')"></el-button>
+                <el-button size="small" :icon="Bottom" circle @click="scrollToBottom('containerMessage')"></el-button>
               </el-tooltip>
             </div>
           </div>
@@ -97,260 +97,262 @@
   </div>
 </template>
 
-<script>
+<script lang="ts" setup>
+import { ref, reactive, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute } from "vue-router";
 import request from "@/utils/request";
 import { ElMessage } from "element-plus";
 import { serviceLog } from "@/utils/before";
-import { default as AnsiUp } from 'ansi_up';
-import { ArrowRight, Document, Monitor, Box, Delete, Bottom } from '@element-plus/icons-vue';
+import AnsiUp from 'ansi_up';
+import { ArrowRight, Document, Monitor, Box, Delete, Bottom } from '@element-plus/icons-vue'
 
-export default {
-  name: "OnlineServiceLog",
-  data() {
-    return {
-      serviceId: '',
-      logLoading: false,
-      conLogLoading: false,
-      serviceName: '',
-      serviceState: '',
-      serviceStateDic: {
-        running: '运行中',
-        stoped: '停止',
-        exited: '停止',
-        error: '未知异常',
-        error_connection: '连接异常',
-        error_starting: '启动异常',
-        error_running: '运行异常',
-        waiting: '等待资源',
-        starting: '部署中',
-      },
-      redFlag: false,
-      blueFlag: false,
-      pageIndex: '0',
-      showContainerLog: 0,//0不显示，1显示
-      wsDict: {},
-      httpDict: {},
-      log_data: [],//日志内容列表
-      ArrowRight, Document, Monitor, Box, Delete, Bottom
-    }
-  },
-  computed: {
-    getServiceStateType() {
-      const stateMap = {
-        running: 'success',
-        stoped: 'info',
-        exited: 'info',
-        error: 'danger',
-        error_connection: 'danger',
-        error_starting: 'danger',
-        error_running: 'danger',
-        waiting: 'warning',
-        starting: 'warning',
-      };
-      return stateMap[this.serviceState] || 'info';
-    }
-  },
-  created() {
-    const route = useRoute();
-    console.log(route.query.serviceId, 'route.query.serviceId')
-    this.serviceId = route.query.serviceId;
-    this.serviceName = route.query.serviceName;
-    this.serviceState = route.query.serviceState;
-    this.logConnection(`ws://192.168.109.198:8090/task/read_log/${this.serviceId}`, 'serviceMessages');
-  },
-  beforeUnmount() {
-    //关闭页面后将所有的websocket连接关闭
-    Object.keys(this.wsDict).forEach(item => {
-      this.wsDict[item].close();
-    })
-  },
-  watch: {
-    pageIndex: {
-      handler(newValue, oldValue) {
-        if (this.pageIndex === '1') {
-          //调用查数据库nodeid和containerid的接口,根据服务状态显示气质日志
-          let node_id = '';
-          let c_id = '';
-          let param = { service_id: this.serviceId }
-          this.conLogLoading = true;
-          request.get('OnlineService/GetExtraConf', {
-            params: param
-          }).then(res => {
-            console.log(res.data, 'res.data');
-            //当容器位于存在和不存在两个状态之间转变时才会删除原先的dom子节点重新加载日志
-            if ((res.data.service_state !== this.serviceState)) {
-              this.wsDict = {};
-              this.httpDict = {};
-              this.clearLogs('containerMessage');
-            }
-            this.serviceState = res.data.service_state;
-            if (res.data.service_state === 'running') {
-              node_id = res.data.extra_conf.node_id;
-              c_id = res.data.extra_conf.container_id;
-              let url = `ws://192.168.109.198:8090/container/read_log/${node_id}/${c_id}`
-              if (!this.wsDict[url]) {
-                this.logConnection(url, 'containerMessage')
-              }
-            } else {
-              if (!this.httpDict[this.serviceId]) {
-                //使用http接口接收日志
-                serviceLog(this.serviceId.toString()).then(res => {
-                  console.log(res.data, 'res.data')
-                  this.httpDict[this.serviceId] = res.data
-                  this.logProcess(res.data);
-                  this.conLogLoading = false;
-                }).catch(err => {
-                  this.conLogLoading = false;
-                })
-              } else {
-                this.conLogLoading = false;
-              }
-            }
-          }).catch(err => {
-            ElMessage({ message: '接口异常', type: 'error', offset: 60 })
-            this.conLogLoading = false;
-          })
-        }
-      },
-      deep: true,
-    },
-  },
-  methods: {
-    //连接日志
-    logConnection(url, ele) {
-      let ansi_up = new AnsiUp()
-      this.log_data = []
-      const _this = this;
-      if (ele === 'serviceMessages') {
-        _this.logLoading = true;
-      } else {
-        _this.conLogLoading = true;
-      }
-      let mark = 0;
-      let messageNumber = 0;
-      const ws = new WebSocket(url);
-      _this.wsDict[url] = ws;
-      ws.onopen = function () {
-        console.log('WS open')
-      };
-      ws.onclose = function () {
-        console.log('WS close');
-      };
-      ws.onerror = function (event) {
-        // console.log(event.data);
-      };
-      ws.onmessage = function (event) {
-        if (event.data !== "pass") {
-          messageNumber += 1;
-          let log_line = ansi_up.ansi_to_html(event.data)
-          var messages = document.getElementById(ele);
-          var message = document.createElement('div');
-          message.className = 'log-line';
-          message.innerHTML = log_line
-          
-          // 为不同类型的日志设置不同样式类
-          if (event.data.indexOf('| error |') >= 0 || event.data.indexOf('| ERROR |') >= 0) {
-            message.classList.add('log-error');
-            this.redFlag = true;
-            this.blueFlag = false;
-          } else if (event.data.indexOf('| warning |') >= 0 || event.data.indexOf('| WARNING |') >= 0) {
-            message.classList.add('log-warning');
-            this.redFlag = false;
-            this.blueFlag = false;
-          } else if (event.data.indexOf('| INFO |') >= 0) {
-            message.classList.add('log-info');
-            this.redFlag = false;
-            this.blueFlag = false;
-          } else if (event.data.indexOf('以下是容器内部日志') >= 0) {
-            message.classList.add('log-header');
-            this.blueFlag = true;
-            this.redFlag = false;
-          }
-          
-          if (this.redFlag) {
-            message.classList.add('log-error');
-          } else if (this.blueFlag) {
-            message.classList.add('log-header');
-          }
-          
-          if (event.data.indexOf('效果最好的模型超参数是：') >= 0) {
-            mark = messageNumber;
-            message.classList.add('log-highlight');
-          }
-          
-          if ((messageNumber - mark === 1) && mark !== 0) {
-            message.classList.add('log-highlight');
-          }
+const serviceId = ref<string>('')
+const serviceName = ref<string>('')
+const serviceState = ref<string>('')
+const pageIndex = ref('0')
+const logLoading = ref(false)
+const conLogLoading = ref(false)
+const wsDict = reactive<Record<string, WebSocket>>({})
+const httpDict = reactive<Record<string, any>>({})
+const log_data = ref<any[]>([])
+const redFlag = ref(false)
+const blueFlag = ref(false)
+const logBuffer = ref<HTMLElement[]>([])
+let logRenderTimer: ReturnType<typeof setTimeout> | null = null
 
-          messages.appendChild(message);
-          
-          // 自动滚动到底部
-          messages.scrollTop = messages.scrollHeight;
-        }
-        
-        if (ele === 'serviceMessages') {
-          _this.logLoading = false;
-        } else {
-          _this.conLogLoading = false;
-        }
-      };
-    },
-    changeIndex(param) {
-      this.pageIndex = param;
-    },
-    logProcess(data) {
-      let ansi_up = new AnsiUp()
-      let liList = []
-      liList = data.split('\n');
-      liList.forEach(item => {
-        let log_line = ansi_up.ansi_to_html(item)
-        var messages = document.getElementById('containerMessage');
-        var message = document.createElement('div');
-        message.className = 'log-line';
-        
-        // 为不同类型的日志设置不同样式类
-        if (item.indexOf('| error |') >= 0 || item.indexOf('| ERROR |') >= 0) {
-          message.classList.add('log-error');
-        } else if (item.indexOf('| warning |') >= 0 || item.indexOf('| WARNING |') >= 0) {
-          message.classList.add('log-warning');
-        } else if (item.indexOf('| INFO |') >= 0) {
-          message.classList.add('log-info');
-        } else if (item.indexOf('以下是容器内部日志') >= 0) {
-          message.classList.add('log-header');
-        }
-        
-        message.innerHTML = log_line
-        messages.appendChild(message)
-      })
-      
-      // 自动滚动到底部
-      let container = document.getElementById('containerMessage');
-      if (container) {
-        container.scrollTop = container.scrollHeight;
+const serviceStateDic: Record<string, string> = {
+  running: '运行中',
+  stoped: '停止',
+  exited: '停止',
+  error: '未知异常',
+  error_connection: '连接异常',
+  error_starting: '启动异常',
+  error_running: '运行异常',
+  waiting: '等待资源',
+  starting: '部署中',
+}
+
+const getServiceStateType = computed(() => {
+  const stateMap: Record<string, string> = {
+    running: 'success',
+    stoped: 'info',
+    exited: 'info',
+    error: 'danger',
+    error_connection: 'danger',
+    error_starting: 'danger',
+    error_running: 'danger',
+    waiting: 'warning',
+    starting: 'warning',
+  }
+  return stateMap[serviceState.value] || 'info'
+})
+
+/** 切换日志tab */
+function changeIndex(param: string) {
+  pageIndex.value = param
+}
+
+/** 清空日志内容 */
+function clearLogs(elementId: string) {
+  const logElement = document.getElementById(elementId)
+  if (logElement) {
+    while (logElement.firstChild) {
+      logElement.removeChild(logElement.firstChild)
+    }
+  }
+  if (elementId === 'containerMessage') {
+    Object.keys(httpDict).forEach(key => delete httpDict[key])
+  }
+  ElMessage({ message: '日志已清空', type: 'success', offset: 60 })
+}
+
+/** 滚动到底部 */
+function scrollToBottom(elementId: string) {
+  const logElement = document.getElementById(elementId)
+  if (logElement) {
+    logElement.scrollTop = logElement.scrollHeight
+  }
+}
+
+/** 日志批量渲染，防止卡顿 */
+function renderLogs(ele: string) {
+  const messages = document.getElementById(ele)
+  if (!logBuffer.value.length || !messages) return
+  const fragment = document.createDocumentFragment()
+  while (logBuffer.value.length) {
+    const log = logBuffer.value.shift()
+    if (log) fragment.appendChild(log)
+  }
+  messages.appendChild(fragment)
+  messages.scrollTop = messages.scrollHeight
+  logRenderTimer = null
+}
+
+/** 连接日志WebSocket并批量渲染日志 */
+function logConnection(url: string, ele: string) {
+  const ansi_up = new AnsiUp()
+  log_data.value = []
+  if (ele === 'serviceMessages') {
+    logLoading.value = true
+  } else {
+    conLogLoading.value = true
+  }
+  let mark = 0
+  let messageNumber = 0
+  const ws = new WebSocket(url)
+  wsDict[url] = ws
+
+  // 清空缓冲区和定时器
+  logBuffer.value = []
+  if (logRenderTimer) clearTimeout(logRenderTimer)
+
+  ws.onopen = () => {}
+  ws.onclose = () => {
+    if (logRenderTimer) clearTimeout(logRenderTimer)
+  }
+  ws.onerror = () => {}
+
+  ws.onmessage = function (event) {
+    if (event.data !== "pass") {
+      messageNumber += 1
+      let log_line = ansi_up.ansi_to_html(event.data)
+      const message = document.createElement('div')
+      message.className = 'log-line'
+      message.innerHTML = log_line
+
+      // 日志样式判断
+      if (event.data.indexOf('| error |') >= 0 || event.data.indexOf('| ERROR |') >= 0) {
+        message.classList.add('log-error')
+        redFlag.value = true
+        blueFlag.value = false
+      } else if (event.data.indexOf('| warning |') >= 0 || event.data.indexOf('| WARNING |') >= 0) {
+        message.classList.add('log-warning')
+        redFlag.value = false
+        blueFlag.value = false
+      } else if (event.data.indexOf('| INFO |') >= 0) {
+        message.classList.add('log-info')
+        redFlag.value = false
+        blueFlag.value = false
+      } else if (event.data.indexOf('以下是容器内部日志') >= 0) {
+        message.classList.add('log-header')
+        blueFlag.value = true
+        redFlag.value = false
       }
-    },
-    // 新增方法
-    clearLogs(elementId) {
-      const logElement = document.getElementById(elementId);
-      if (logElement) {
-        while (logElement.firstChild) {
-          logElement.removeChild(logElement.firstChild);
-        }
+
+      if (redFlag.value) {
+        message.classList.add('log-error')
+      } else if (blueFlag.value) {
+        message.classList.add('log-header')
       }
-      if (elementId === 'containerMessage') {
-        this.httpDict = {};
+
+      if (event.data.indexOf('效果最好的模型超参数是：') >= 0) {
+        mark = messageNumber
+        message.classList.add('log-highlight')
       }
-      ElMessage({ message: '日志已清空', type: 'success', offset: 60 });
-    },
-    scrollToBottom(elementId) {
-      const logElement = document.getElementById(elementId);
-      if (logElement) {
-        logElement.scrollTop = logElement.scrollHeight;
+      if ((messageNumber - mark === 1) && mark !== 0) {
+        message.classList.add('log-highlight')
       }
+
+      // 推入缓冲区
+      logBuffer.value.push(message)
+      // 批量渲染（每 16ms 或 50 条日志渲染一次）
+      if (!logRenderTimer || logBuffer.value.length > 50) {
+        logRenderTimer = setTimeout(() => renderLogs(ele), 16)
+      }
+    }
+
+    if (ele === 'serviceMessages') {
+      logLoading.value = false
+    } else {
+      conLogLoading.value = false
     }
   }
 }
+
+/** 处理http获取的日志 */
+function logProcess(data: string) {
+  const ansi_up = new AnsiUp()
+  const liList = data.split('\n')
+  liList.forEach(item => {
+    let log_line = ansi_up.ansi_to_html(item)
+    const messages = document.getElementById('containerMessage')
+    const message = document.createElement('div')
+    message.className = 'log-line'
+    // 日志样式判断
+    if (item.indexOf('| error |') >= 0 || item.indexOf('| ERROR |') >= 0) {
+      message.classList.add('log-error')
+    } else if (item.indexOf('| warning |') >= 0 || item.indexOf('| WARNING |') >= 0) {
+      message.classList.add('log-warning')
+    } else if (item.indexOf('| INFO |') >= 0) {
+      message.classList.add('log-info')
+    } else if (item.indexOf('以下是容器内部日志') >= 0) {
+      message.classList.add('log-header')
+    }
+    message.innerHTML = log_line
+    messages?.appendChild(message)
+  })
+  // 自动滚动到底部
+  const container = document.getElementById('containerMessage')
+  if (container) {
+    container.scrollTop = container.scrollHeight
+  }
+}
+
+// tab切换时加载容器日志
+watch(pageIndex, (newValue) => {
+  if (newValue === '1') {
+    let node_id = ''
+    let c_id = ''
+    let param = { service_id: serviceId.value }
+    conLogLoading.value = true
+    request.get('OnlineService/GetExtraConf', { params: param }).then(res => {
+      if ((res.data.service_state !== serviceState.value)) {
+        Object.keys(wsDict).forEach(key => wsDict[key].close())
+        Object.keys(httpDict).forEach(key => delete httpDict[key])
+        clearLogs('containerMessage')
+      }
+      serviceState.value = res.data.service_state
+      if (res.data.service_state === 'running') {
+        node_id = res.data.extra_conf.node_id
+        c_id = res.data.extra_conf.container_id
+        let url = `ws://192.168.109.198:8090/container/read_log/${node_id}/${c_id}`
+        if (!wsDict[url]) {
+          logConnection(url, 'containerMessage')
+        }
+      } else {
+        if (!httpDict[serviceId.value]) {
+          serviceLog(serviceId.value.toString()).then(res => {
+            httpDict[serviceId.value] = res.data
+            logProcess(res.data)
+            conLogLoading.value = false
+          }).catch(() => {
+            conLogLoading.value = false
+          })
+        } else {
+          conLogLoading.value = false
+        }
+      }
+    }).catch(() => {
+      ElMessage({ message: '接口异常', type: 'error', offset: 60 })
+      conLogLoading.value = false
+    })
+  }
+}, { immediate: false })
+
+onMounted(() => {
+  const route = useRoute()
+  serviceId.value = String(route.query.serviceId || '')
+  serviceName.value = String(route.query.serviceName || '')
+  serviceState.value = String(route.query.serviceState || '')
+  logConnection(`ws://192.168.109.198:8090/task/read_log/${serviceId.value}`, 'serviceMessages')
+})
+
+onBeforeUnmount(() => {
+  Object.keys(wsDict).forEach(item => {
+    wsDict[item].close()
+  })
+  if (logRenderTimer) clearTimeout(logRenderTimer)
+})
 </script>
 
 <style scoped>
