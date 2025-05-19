@@ -8,8 +8,6 @@
           {{ pageIndex === 1 ? '我的模型' : '公开模型' }}
         </el-breadcrumb-item>
       </el-breadcrumb>
-      
-      <!-- 模型概览卡片 -->
       <div class="model-metrics">
         <div class="metric-card" v-if="pageIndex === 1">
           <div class="metric-value">{{ myModelData.length }}</div>
@@ -53,7 +51,6 @@
               刷新列表
             </el-button>
           </div>
-          
           <div class="middle-area">
             <div class="filter-group">
               <span class="filter-label">任务类型：</span>
@@ -67,7 +64,6 @@
               </el-select>
             </div>
           </div>
-          
           <div class="right-area">
             <div class="search-box">
               <el-input
@@ -90,7 +86,6 @@
             </div>
           </div>
         </div>
-
         <!--我的模型列表-->
         <div class="table-container">
           <el-table 
@@ -159,7 +154,6 @@
                       </el-dropdown-menu>
                     </template>
                   </el-dropdown>
-                  
                   <el-button 
                     v-if="scope.row.model_state === 'not deployed'"
                     link 
@@ -169,7 +163,6 @@
                   >
                     修改
                   </el-button>
-                  
                   <el-popconfirm title="确定删除吗？" @confirm="modelDeleteMethod(scope.row)">
                     <template #reference>
                       <el-button link type="primary" class="action-button">删除</el-button>
@@ -180,7 +173,6 @@
             </el-table-column>
           </el-table>
         </div>
-        
         <!--模型信息修改对话框-->
         <el-dialog v-model="modifyMyModelDialog" title="模型修改" width="500px" class="model-dialog">
           <el-form
@@ -217,7 +209,7 @@
           <div class="left-area">
             <el-button 
               class="refresh-btn" 
-              @click="loadPublicModel({is_public:1})" 
+              @click="() => loadPublicModel({is_public:1})" 
               :loading="publicModelLoading"
               type="primary"
               plain>
@@ -225,7 +217,6 @@
               刷新列表
             </el-button>
           </div>
-          
           <div class="middle-area">
             <div class="filter-group">
               <span class="filter-label">所有者：</span>
@@ -239,7 +230,6 @@
               </el-select>
             </div>
           </div>
-          
           <div class="right-area">
             <div class="search-box">
               <el-input
@@ -262,7 +252,6 @@
             </div>
           </div>
         </div>
-        
         <!--公开模型列表-->
         <div class="table-container">
           <el-table 
@@ -331,346 +320,241 @@
   </div>
 </template>
 
+<script lang="ts" setup>
+import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { Calendar, Search, ArrowDown, QuestionFilled, Refresh, ArrowRight, Box } from '@element-plus/icons-vue'
+import request from "@/utils/request"
+import { dictionaryE2C } from "../AutoModel/taskStaticData"
+import { modelDelete } from "@/utils/before"
 
-<script>
-import { Calendar,Search,ArrowDown,QuestionFilled,Refresh,ArrowRight,Box } from '@element-plus/icons-vue';
-import request from "@/utils/request";
-import router from "@/router";
-import {ElMessage} from "element-plus";
-import { dictionaryE2C } from "../AutoModel/taskStaticData";
-import { useRoute } from 'vue-router';
-import {modelDelete} from "@/utils/before";
+const router = useRouter()
+const route = useRoute()
 
-export default {
-  name: "MyModel",
-  components: {
-    Calendar,
-    Search,
-    ArrowDown,
-    QuestionFilled,
-    Refresh,
-    ArrowRight,
-    Box
-  },
-  data(){
-    const E2C = dictionaryE2C;
-    return{
-      Calendar,
-      ArrowRight,
-      Box,
-      pageIndex:1,
-      myModelData:[
-        {
-          name:'模型1',
-          modelId:'1',
-          type:'时间序列预测',
-          createTime:'2022-10-20 10:00',
-        }
-      ],
-      formOfDeploy:{
+const E2C = dictionaryE2C
 
-      },
-      modelSource:'自动建模',
-      toHouseDialogVisible:false,
-      Search,
-      modelLoading:false,
-      taskType:'所属任务类型',
-      modelStateList:[
-        {
-          value:'',
-          label:'全部'
-        },
-        {
-          value:'classification',
-          label:'分类'
-        },
-        {
-          value:'regression',
-          label:'回归'
-        },
-        {
-          value:'time_series_prediction',
-          label:'时间序列预测'
-        },
-        {
-          value: 'named_entity_recognition',
-          label: '命名实体识别'
-        }
-      ],
-      E2C,
-      selectInputByModelName:'',
-      modelStateDic:{
-        'not deployed' : '未部署',
-        'deployed' : '已部署'
-      },
-      publicModelLoading:false,
-      myModelLoading:false,
-      publicModelData:[],
-      publicModelOwnerList:[
-        {
-          label:'显示所有公开模型',
-          value:1
-        },
-        {
-          label:'显示当前用户公开模型',
-          value:2
-        },
-        {
-          label:'显示其他用户公开模型',
-          value:3
-        }
-      ],
-      publicModelOwner:1,
-      modifyMyModelDialog:false,
-      formOfModifyMyModel:{},
-      myModelInfo:{
-        modelID:'',
-        taskId:'',
-      }
+const pageIndex = ref(1)
+const myModelData = ref<any[]>([])
+const publicModelData = ref<any[]>([])
+const myModelLoading = ref(false)
+const publicModelLoading = ref(false)
+const taskType = ref('所属任务类型')
+const selectInputByModelName = ref('')
+const publicModelOwner = ref(1)
+const modifyMyModelDialog = ref(false)
+const formOfModifyMyModel = reactive<{ modelName?: string; modelDesc?: string; isPublic?: string }>({})
+const myModelInfo = reactive<{ modelID: string; taskId: string }>({ modelID: '', taskId: '' })
 
-    }
-  },
-  components:{
-    ArrowDown,
-    QuestionFilled
-  },
-  watch:{
-    pageIndex:{
-      handler(){
-        if(this.pageIndex === 1){
-          this.loadMyModel();
-        }else if(this.pageIndex === 2){
-          this.loadPublicModel();
-        }else{
-          return
-        }
-      },
-      deep:true,
-    },
-  },
-  created() {
-    const route = useRoute();
-    if(route.query.modelId){
-      let modelId = route.query.modelId;
-      let middle = {model_id:modelId};
-      this.loadMyModel(middle);
-    }else{
-      this.loadMyModel();
-    }
-  },
-  methods:{
-    // 添加一个获取特定状态模型的方法
-    getModelsByState(state) {
-      return this.myModelData.filter(model => this.modelStateDic[model.model_state] === state);
-    },
-    //切换模型页面
-    changePageIndex(param){
-      this.pageIndex = param;
-    },
-    // //加载模型的接口
-    // loadMyModel(param,time){
-    //   this.myModelLoading = true;
-    //   setTimeout(()=>{
-    //     request.get('/ModelRepository/GetModelList',{
-    //       params:param ? param : {}
-    //     }).then(res=>{
-    //       console.log(res.data,'res.data in myModel')
-    //       this.myModelData = res.data;
-    //       console.log(res.data,'res.data in loadModel')
-    //       this.myModelData.forEach(item=>{
-    //         item.is_public = (item.is_public === '0' ? '不公开':'公开');
-    //         item.task_type = Object.keys(this.E2C).includes(item.task_type) ? this.E2C[item.task_type] : item.task_type;
-    //       })
-    //       this.myModelLoading = false;
-    //     }).catch(err=>{
-    //       this.myModelLoading = false;
-    //       ElMessage({
-    //         message:"加载失败！",
-    //         type:'error',
-    //         offset:60
-    //       });
-    //     })
-    //   },time ? time:1000)
-    // },
-    loadMyModel(param, time) {
-      this.myModelLoading = true;
-      
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          request.get('/ModelRepository/GetModelList', {
-            params: param ? param : {}
-          }).then(res => {
-            console.log(res.data, 'res.data in myModel')
-            this.myModelData = res.data;
-            this.myModelData.forEach(item => {
-              item.is_public = (item.is_public === '0' ? '不公开' : '公开');
-              item.task_type = Object.keys(this.E2C).includes(item.task_type) ? this.E2C[item.task_type] : item.task_type;
-            })
-            this.myModelLoading = false;
-            resolve(res);
-          }).catch(err => {
-            this.myModelLoading = false;
-            ElMessage({
-              message: "加载失败！",
-              type: 'error',
-              offset: 60
-            });
-            resolve(err); // 即使出错也resolve，以继续后续流程
-          })
-        }, time ? time : 1000)
-      });
-    },
-    //加载公开模型
-    loadPublicModel(param,time){
-      this.publicModelLoading = true;
-      console.log(param,'param in loadpublicmodel')
-      setTimeout(()=>{
-        request.get('/ModelRepository/GetModelList',{
-          params:param ? param : {is_public:1}
-        }).then(res=>{
-          console.log(res.data,'res.data in loadPublicModel')
-          this.publicModelData = res.data;
-          this.publicModelData.forEach(item=>{
-            item.is_public = (item.is_public === '0' ? '不公开':'公开');
-            item.task_type = Object.keys(this.E2C).includes(item.task_type) ? this.E2C[item.task_type] : item.task_type;
-          })
-          this.publicModelLoading = false;
-        }).catch(err=>{
-          this.publicModelLoading = false;
-          ElMessage({
-            message:"加载失败！",
-            type:'error',
-            offset:60
-          });
+const modelStateList = [
+  { value: '', label: '全部' },
+  { value: 'classification', label: '分类' },
+  { value: 'regression', label: '回归' },
+  { value: 'time_series_prediction', label: '时间序列预测' },
+  { value: 'named_entity_recognition', label: '命名实体识别' }
+]
+
+const modelStateDic: Record<string, string> = {
+  'not deployed': '未部署',
+  'deployed': '已部署'
+}
+
+const publicModelOwnerList = [
+  { label: '显示所有公开模型', value: 1 },
+  { label: '显示当前用户公开模型', value: 2 },
+  { label: '显示其他用户公开模型', value: 3 }
+]
+
+/** 获取特定状态的模型 */
+function getModelsByState(state: string) {
+  return myModelData.value.filter(model => modelStateDic[model.model_state] === state)
+}
+
+/** 切换模型页面 */
+function changePageIndex(param: number) {
+  pageIndex.value = param
+}
+
+/** 加载我的模型 */
+function loadMyModel(param?: any, time?: number) {
+  myModelLoading.value = true
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      request.get('/ModelRepository/GetModelList', {
+        params: param ? param : {}
+      }).then(res => {
+        myModelData.value = res.data
+        myModelData.value.forEach((item: any) => {
+          item.is_public = (item.is_public === '0' ? '不公开' : '公开')
+          item.task_type = (item.task_type in E2C)
+            ? E2C[item.task_type as keyof typeof E2C]
+            : item.task_type
         })
-      },time ? time:1000)
-    },
-    //打开修改模型信息的窗口
-    openModifyDialog(param){
-      this.modifyMyModelDialog = true;
-      //保存模型的ID和对应任务的ID
-      this.myModelInfo.modelID = param.model_id;
-      this.myModelInfo.taskId = param.task_id;
-      //初始化未修改前的模型相关信息
-      this.formOfModifyMyModel.isPublic = param.is_public;
-      this.formOfModifyMyModel.modelName = param.model_name;
-      this.formOfModifyMyModel.modelDesc = param.model_desc;
-    },
-    //修改模型的基本信息
-    modifyMyModel(){
-      this.modifyMyModelDialog = false;
-      let middle = {
-        model_id:this.myModelInfo.modelID,
-        task_id:this.myModelInfo.taskId,
-        model_name:this.formOfModifyMyModel.modelName,
-        model_desc:this.formOfModifyMyModel.modelDesc,
-        is_public:this.formOfModifyMyModel.isPublic === '不公开' ? 0 : 1
-      }
-      request.put('/ModelRepository/UpdateModel',middle,{
-            headers:{'dateType':'json','Content-Type':'application/json'}
-          }
-      ).then(res=>{
-        ElMessage({
-          message:'修改成功!',
-          type:'success',
-          offset:60
-        })
-      }).catch(err=>{
-        ElMessage({
-          message:'修改失败!',
-          type:'error',
-          offset:60
-        })
-      })
-      console.log(middle,'middle in modifyMyModel');
-      this.loadMyModel();
-    },
-    //点击部署在线服务
-    createOnlineService(param){
-      router.push({path:'/onlineServiceDeploy',query:{modelName:param.model_name,modelId:param.model_id,
-          taskId:param.task_id,task_history_id:param.task_history_id,deployMode:'modelSpecific'}});
-    },
-    //根据任务的类型筛选模型(我的模型)
-    selectByTaskType(val){
-      let middle = {task_type:val}
-      this.loadMyModel(middle)
-    },
-    //根据任务的类型筛选模型(公开模型)
-    selectByTaskTypeAndPublic(val){
-      let middle = {is_public:val}
-      this.loadPublicModel(middle);
-    },
-    //通过模型名称模糊搜索(我的模型)
-    selectByModelName(){
-      let middle = {model_name:this.selectInputByModelName};
-      this.loadMyModel(middle);
-    },
-    //通过模型名称模糊搜索(公开模型)
-    selectByModelNameAndPublic(){
-      let middle = {model_name:this.selectInputByModelName,is_public:1};
-      this.loadPublicModel(middle);
-    },
-    //点击所属历史任务ID跳转到任务的详情页
-    toTaskDetails(param){
-      console.log('跳转了')
-      router.push({path:'/taskDetails',query:{taskId:param.task_id,taskState:'训练完成',pageIndex:'3'}})
-    },
-    // modelDeleteMethod(param){
-    //   let middle = {model_id:param.model_id}
-    //   console.log(param.model_id,'modelid in modelDeletemethod')
-    //   modelDelete(middle).then(res=>{
-    //     this.loadMyModel(null,2000);
-    //     setTimeout(()=>{
-    //       ElMessage({
-    //         message:'删除成功！',
-    //         type:'success',
-    //         offset:60
-    //       })
-    //     },2000)
-    //     console.log(res.data,'res.data in modelDeletemethod')
-    //   }).catch(err=>{
-    //     ElMessage({
-    //       message:'删除失败！',
-    //       type:'error',
-    //       offset:60
-    //     })
-    //   })
-    // },
-    modelDeleteMethod(param) {
-      let middle = { model_id: param.model_id }
-      console.log(param.model_id, 'modelid in modelDeletemethod')
-      
-      // 先显示删除中的加载状态
-      this.myModelLoading = true;
-      
-      modelDelete(middle).then(res => {
-        console.log('删除响应:', res)
-        
-        // 刷新模型列表
-        this.loadMyModel(null, 0).then(() => {
-          // 列表刷新完成后显示成功消息
-          ElMessage({
-            message: '删除成功！',
-            type: 'success',
-            offset: 60
-          })
-        })
+        myModelLoading.value = false
+        resolve(res)
       }).catch(err => {
-        console.error('删除错误:', err)
-        this.myModelLoading = false;
-        
-        // 即使有错误，也尝试刷新列表，因为可能删除已经成功
-        this.loadMyModel(null, 0);
-        
+        myModelLoading.value = false
         ElMessage({
-          message: '操作完成，请检查模型是否已删除',
-          type: 'warning',
+          message: "加载失败！",
+          type: 'error',
           offset: 60
         })
+        resolve(err)
       })
-    },
-  }
+    }, time ? time : 1000)
+  })
 }
+
+/** 加载公开模型 */
+function loadPublicModel(param?: any, time?: number) {
+  publicModelLoading.value = true
+  setTimeout(() => {
+    request.get('/ModelRepository/GetModelList', {
+      params: param ? param : { is_public: 1 }
+    }).then(res => {
+      publicModelData.value = res.data
+      publicModelData.value.forEach((item: any) => {
+        item.is_public = (item.is_public === '0' ? '不公开' : '公开')
+        item.task_type = (item.task_type in E2C)
+          ? E2C[item.task_type as keyof typeof E2C]
+          : item.task_type
+      })
+      publicModelLoading.value = false
+    }).catch(err => {
+      publicModelLoading.value = false
+      ElMessage({
+        message: "加载失败！",
+        type: 'error',
+        offset: 60
+      })
+    })
+  }, time ? time : 1000)
+}
+
+/** 打开修改模型信息的窗口 */
+function openModifyDialog(param: any) {
+  modifyMyModelDialog.value = true
+  myModelInfo.modelID = param.model_id
+  myModelInfo.taskId = param.task_id
+  formOfModifyMyModel.isPublic = param.is_public
+  formOfModifyMyModel.modelName = param.model_name
+  formOfModifyMyModel.modelDesc = param.model_desc
+}
+
+/** 修改模型的基本信息 */
+function modifyMyModel() {
+  modifyMyModelDialog.value = false
+  const middle = {
+    model_id: myModelInfo.modelID,
+    task_id: myModelInfo.taskId,
+    model_name: formOfModifyMyModel.modelName,
+    model_desc: formOfModifyMyModel.modelDesc,
+    is_public: formOfModifyMyModel.isPublic === '不公开' ? 0 : 1
+  }
+  request.put('/ModelRepository/UpdateModel', middle, {
+    headers: { 'dateType': 'json', 'Content-Type': 'application/json' }
+  }).then(() => {
+    ElMessage({
+      message: '修改成功!',
+      type: 'success',
+      offset: 60
+    })
+  }).catch(() => {
+    ElMessage({
+      message: '修改失败!',
+      type: 'error',
+      offset: 60
+    })
+  })
+  loadMyModel()
+}
+
+/** 点击部署在线服务 */
+function createOnlineService(param: any) {
+  router.push({
+    path: '/onlineServiceDeploy',
+    query: {
+      modelName: param.model_name,
+      modelId: param.model_id,
+      taskId: param.task_id,
+      task_history_id: param.task_history_id,
+      deployMode: 'modelSpecific'
+    }
+  })
+}
+
+/** 根据任务的类型筛选模型(我的模型) */
+function selectByTaskType(val: string) {
+  let middle = { task_type: val }
+  loadMyModel(middle)
+}
+
+/** 根据任务的类型筛选模型(公开模型) */
+function selectByTaskTypeAndPublic(val: string) {
+  let middle = { is_public: val }
+  loadPublicModel(middle)
+}
+
+/** 通过模型名称模糊搜索(我的模型) */
+function selectByModelName() {
+  let middle = { model_name: selectInputByModelName.value }
+  loadMyModel(middle)
+}
+
+/** 通过模型名称模糊搜索(公开模型) */
+function selectByModelNameAndPublic() {
+  let middle = { model_name: selectInputByModelName.value, is_public: 1 }
+  loadPublicModel(middle)
+}
+
+/** 点击所属历史任务ID跳转到任务的详情页 */
+function toTaskDetails(param: any) {
+  router.push({ path: '/taskDetails', query: { taskId: param.task_id, taskState: '训练完成', pageIndex: '3' } })
+}
+
+/** 删除模型 */
+function modelDeleteMethod(param: any) {
+  let middle = { model_id: param.model_id }
+  myModelLoading.value = true
+  modelDelete(middle).then(() => {
+    loadMyModel(undefined, 0).then(() => {
+      ElMessage({
+        message: '删除成功！',
+        type: 'success',
+        offset: 60
+      })
+    })
+  }).catch(() => {
+    myModelLoading.value = false
+    loadMyModel(undefined, 0)
+    ElMessage({
+      message: '操作完成，请检查模型是否已删除',
+      type: 'warning',
+      offset: 60
+    })
+  })
+}
+
+// 页面切换时自动加载数据
+watch(pageIndex, (val) => {
+  if (val === 1) {
+    loadMyModel()
+  } else if (val === 2) {
+    loadPublicModel()
+  }
+}, { immediate: true })
+
+// 页面初始化时根据路由参数加载模型
+onMounted(() => {
+  if (route.query.modelId) {
+    let modelId = route.query.modelId
+    let middle = { model_id: modelId }
+    loadMyModel(middle)
+  } else {
+    loadMyModel()
+  }
+})
+
 </script>
 
 <style scoped>
