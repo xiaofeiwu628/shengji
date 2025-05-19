@@ -2,7 +2,7 @@
   <div class="menu-left-container">
     <el-menu
       router
-      :default-active="$route.path"
+      :default-active="route.path"
       class="side-menu"
     >
       <div class="menu-header">
@@ -48,38 +48,15 @@
   </div>
 </template>
 
-<script>
-import {
-  Document,
-  Menu as IconMenu,
-  Location,
-  Setting,
-  Monitor,
-  Files,
-  Cpu,
-  Box,
-  Plus
-} from '@element-plus/icons-vue';
-import router from "@/router";
+<script lang="ts" setup>
+import { useRouter, useRoute } from 'vue-router'
 
-export default {
-  name: "Menu_left",
-  components: {
-    Document,
-    IconMenu,
-    Location,
-    Setting,
-    Monitor,
-    Files,
-    Cpu,
-    Box,
-    Plus
-  },
-  methods: {
-    navigateTo(route) {
-      router.push(`/${route}`);
-    }
-  }
+
+const router = useRouter()
+const route = useRoute()
+
+function navigateTo(routeName: string) {
+  router.push(`/${routeName}`)
 }
 </script>
 

@@ -7,9 +7,10 @@
     "jsx": "preserve",
     "importHelpers": true,
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "allowJs": true,
     "sourceMap": true,
-    "baseUrl": ".",
+    "baseUrl": "./",
     "paths": {
       "@/*": ["src/*"]
     },

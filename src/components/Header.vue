@@ -6,7 +6,6 @@
         <span class="platform-title">智能中台建模平台</span>
       </router-link>
     </div>
-    
     <div class="user-area">
       <el-dropdown trigger="click">
         <div class="user-dropdown">
@@ -14,27 +13,25 @@
             {{ userName.substring(0, 1).toUpperCase() }}
           </el-avatar>
           <span class="user-name">{{ userName }}</span>
-          <el-icon class="dropdown-icon"><arrow-down /></el-icon>
+          <el-icon class="dropdown-icon"><ArrowDown /></el-icon>
         </div>
-        
         <template #dropdown>
           <el-dropdown-menu class="custom-dropdown">
             <el-dropdown-item>
-              <el-button 
-                type="danger" 
+              <el-button
+                type="danger"
                 plain
-                @click="this.logoffForm = {};this.logoffConfirmView = true" 
+                @click="openLogoffDialog"
                 class="delete-btn"
               >
                 <el-icon><Delete /></el-icon>删除账号
               </el-button>
             </el-dropdown-item>
             <el-dropdown-item>
-              <!-- 将popconfirm改为普通按钮，点击显示dialog -->
-              <el-button 
-                type="warning" 
+              <el-button
+                type="warning"
                 plain
-                @click="showLogoutConfirm" 
+                @click="showLogoutConfirm"
                 class="logout-btn"
               >
                 <el-icon><SwitchButton /></el-icon>退出系统
@@ -44,11 +41,11 @@
         </template>
       </el-dropdown>
     </div>
-    
+
     <!-- 删除账号确认窗口 -->
-    <el-dialog 
-      v-model="logoffConfirmView" 
-      title="账号删除" 
+    <el-dialog
+      v-model="logoffConfirmView"
+      title="账号删除"
       width="360px"
       center
       class="logoff-dialog"
@@ -59,13 +56,11 @@
         <el-icon class="danger-icon"><WarningFilled /></el-icon>
         <h3>警告：此操作不可逆</h3>
       </div>
-      
       <p class="warning-text">删除账号将永久删除用户全部信息和数据！</p>
-      
-      <el-form :model="logoffForm" :rules="rules" ref="logoffForm" class="logoff-form">
+      <el-form :model="logoffForm" :rules="rules" ref="logoffFormRef" class="logoff-form">
         <el-form-item prop="Username">
-          <el-input 
-            v-model="logoffForm.Username" 
+          <el-input
+            v-model="logoffForm.Username"
             class="custom-input"
             placeholder="请输入用户名"
           >
@@ -74,11 +69,10 @@
             </template>
           </el-input>
         </el-form-item>
-        
         <el-form-item prop="Password">
-          <el-input 
-            v-model="logoffForm.Password" 
-            class="custom-input" 
+          <el-input
+            v-model="logoffForm.Password"
+            class="custom-input"
             type="password"
             placeholder="请输入密码"
             show-password
@@ -89,7 +83,6 @@
           </el-input>
         </el-form-item>
       </el-form>
-      
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="logoffConfirmView = false" class="cancel-btn">取消</el-button>
@@ -98,7 +91,7 @@
       </template>
     </el-dialog>
 
-    <!-- 新增：退出登录确认对话框 -->
+    <!-- 退出登录确认对话框 -->
     <el-dialog
       v-model="logoutConfirmView"
       title="系统提示"
@@ -119,7 +112,8 @@
         </div>
       </template>
     </el-dialog>
-    <!-- 添加最终确认删除提示框 -->
+
+    <!-- 最终确认删除提示框 -->
     <el-dialog
       v-model="finalConfirmView"
       title="最终确认"
@@ -133,179 +127,137 @@
       <div class="final-confirm-content">
         <el-icon class="danger-icon"><WarningFilled /></el-icon>
         <p class="confirm-warning-text">为防止误操作，请输入"确认删除"以验证</p>
-        
-        <el-input 
+        <el-input
           v-model="confirmText"
           placeholder="请输入：确认删除"
           class="confirm-input"
         />
-        
         <div class="input-hint" :class="{ 'correct': confirmText === '确认删除' }">
-          {{ confirmText === '确认删除' ? '输入正确' : '请输入完整的"确认删除"四个字' }}
+          {{ confirmText === '确认删除' ? '输入正确' : '请输入完整的\"确认删除\"四个字' }}
         </div>
       </div>
-      
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="cancelFinalConfirm" class="cancel-btn">返回</el-button>
-          <el-button 
-            @click="executeLogoff" 
-            type="danger" 
+          <el-button
+            @click="executeLogoff"
+            type="danger"
             class="confirm-btn"
             :disabled="confirmText !== '确认删除'"
           >删除</el-button>
         </div>
       </template>
-    </el-dialog>  
-
+    </el-dialog>
   </div>
 </template>
 
-<script>
-import {ArrowDown, Warning} from "@element-plus/icons-vue";
-import {useRouter} from "vue-router/dist/vue-router";
-import request from "@/utils/request";
-import {  User, Lock, Monitor, Delete, SwitchButton, WarningFilled } from "@element-plus/icons-vue";
-export default {
-  name: "Header",
-  components: {
-    ArrowDown,
-    User, 
-    Lock,
-    Monitor,
-    Delete,
-    SwitchButton,
-    Warning,
-    WarningFilled
-  },
-  setup(){
-    const router = useRouter()
-    let toLogin = ()=>{//返回登录界面
-      router.push({
-        path: '/login',
+<script lang="ts" setup>
+
+import { ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage, FormInstance, FormRules } from 'element-plus'
+import request from "@/utils/request"
+
+
+const router = useRouter()
+
+const userName = ref(localStorage.getItem("Username") || "")// 从本地存储获取用户名
+
+const logoffConfirmView = ref(false)// 删除账号确认窗口
+const logoutConfirmView = ref(false)// 退出登录确认窗口
+const finalConfirmView = ref(false) // 最终确认删除提示框
+const confirmText = ref("") // 确认删除文本框内容
+
+interface LogoffForm {  // 定义注销账号表单的类型
+  Username: string
+  Password: string
+}
+const logoffForm = reactive<LogoffForm>({   // 定义注销账号表单
+  Username: "",
+  Password: ""
+})
+
+const logoffFormRef = ref<FormInstance>()
+
+const rules: FormRules = {// 定义表单验证规则
+  Username: [{ required: true, message: "请输入用户名", trigger: "blur" }],
+  Password: [{ required: true, message: "请输入密码", trigger: "blur" }]
+}
+
+function toLogin() {// 跳转到登录页面
+  router.push({ path: '/login' })
+}
+
+function openLogoffDialog() {// 打开注销账号对话框
+  logoffForm.Username = ""
+  logoffForm.Password = ""
+  logoffConfirmView.value = true
+}
+
+function showLogoutConfirm() {// 显示退出登录确认对话框
+  logoutConfirmView.value = true
+}
+
+function logout() {// 退出登录
+  request.post("/UserLogin/Logout", {
+    Token: localStorage.getItem("Token")
+  }, { headers: { 'Content-Type': 'multipart/form-data' } }).then((res: any) => {
+    if (res.code === '0') {
+      ElMessage({
+        type: "success",
+        message: '登出成功！',
+        offset: 60,
       })
-    };
-    return{
-      toLogin
+      toLogin()
+    } else {
+      ElMessage({
+        type: "error",
+        message: res.msg,
+        offset: 60,
+      })
     }
-  },
-  data(){
-    return{
-      userName: localStorage.getItem("Username"),
-      logoffConfirmView: false,// 删除账号确认对话框
-      logoutConfirmView: false,// 退出确认对话框
-      finalConfirmView: false,// 最终确认删除提示框
-      confirmText: '',// 输入的确认文本
-      logoffForm:{//用户注销表单
-        Username: '',
-        Password: '',
-      },
-      // 校验
-      rules: {
-        Username: [{ required: true, message: "请输入用户名", trigger: "blur" }],
-        Password: [{ required: true, message: "请输入密码", trigger: "blur" }],
-      }
+  })
+}
+
+function showFinalConfirm() {// 显示最终确认删除提示框
+  logoffFormRef.value?.validate((valid: boolean) => {
+    if (valid) {
+      finalConfirmView.value = true
+      confirmText.value = ''
     }
-  },
-  methods:{
-    // 新增：显示退出确认对话框
-    showLogoutConfirm() {
-      this.logoutConfirmView = true;
-    },
-    logout(){
-      request.post("/UserLogin/Logout", {
-        Token : localStorage.getItem("Token")
-      },{headers:{'Content-Type':'multipart/form-data'}}).then(res =>{
-        if(res.code === '0'){
-          this.$message({
-            type: "success",
-            message: '登出成功！',
-            offset:60,
-          })
-          this.toLogin()
-        } else {
-          this.$message({
-            type: "error",
-            message: res.msg,
-            offset:60,
-          })
-        }
-      })
-    },
-    logoff(){
-      this.$refs.logoffForm.validate((valid)=> {//触发表单验证
-        if (valid) {
-          request.post("/UserLogin/Logoff", {
-            Username: this.logoffForm.Username,
-            Password: this.logoffForm.Password,
-            Token : localStorage.getItem("Token")
-          },{headers:{'Content-Type':'multipart/form-data'}}).then(res =>{
-            if(res.code === '0'){
-              this.$message({
-                type: "success",
-                message: '当前用户已注销！',
-                offset:60,
-              })
-              this.toLogin()
-            } else {
-              this.$message({
-                type: "error",
-                message: res.msg,
-                offset:60,
-                customClass:'messageIndex'
-              })
-            }
-          })
-        }
-      })
-    },
-    // 添加显示最终确认窗口的方法
-    showFinalConfirm() {
-      this.$refs.logoffForm.validate((valid)=> {
-        if (valid) {
-          this.finalConfirmView = true;
-          this.confirmText = ''; // 清空之前的输入
-        }
-      });
-    },
-    
-    // 取消最终确认
-    cancelFinalConfirm() {
-      this.finalConfirmView = false;
-    },
-    
-    // 执行实际的删除操作
-    executeLogoff() {
-      if(this.confirmText === '确认删除') {
-        request.post("/UserLogin/Logoff", {
-          Username: this.logoffForm.Username,
-          Password: this.logoffForm.Password,
-          Token : localStorage.getItem("Token")
-        },{headers:{'Content-Type':'multipart/form-data'}}).then(res =>{
-          if(res.code === '0'){
-            this.$message({
-              type: "success",
-              message: '当前用户已注销！',
-              offset:60,
-            });
-            this.finalConfirmView = false;
-            this.logoffConfirmView = false;
-            this.toLogin();
-          } else {
-            this.$message({
-              type: "error",
-              message: res.msg,
-              offset:60,
-              customClass:'messageIndex'
-            });
-          }
-        });
+  })
+}
+
+function cancelFinalConfirm() {// 取消最终确认删除提示框
+  finalConfirmView.value = false
+}
+
+function executeLogoff() {// 执行注销账号操作
+  if (confirmText.value === '确认删除') {
+    request.post("/UserLogin/Logoff", {// 注销账号请求
+      Username: logoffForm.Username,
+      Password: logoffForm.Password,
+      Token: localStorage.getItem("Token")
+    }, { headers: { 'Content-Type': 'multipart/form-data' } }).then((res: any) => {
+      if (res.code === '0') {
+        ElMessage({
+          type: "success",
+          message: '当前用户已注销！',
+          offset: 60,
+        })
+        finalConfirmView.value = false
+        logoffConfirmView.value = false
+        toLogin()
+      } else {
+        ElMessage({
+          type: "error",
+          message: res.msg,
+          offset: 60,
+          customClass: 'messageIndex'
+        })
       }
-    },
-
-
-  },
-
+    })
+  }
 }
 </script>
 

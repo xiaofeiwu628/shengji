@@ -1,31 +1,26 @@
 <template>
   <div style="display: flex; flex-direction: column">
-    <!--    头部-->
-    <Header style='position: fixed'/>
-    <!--    主体-->
-    <div style='display: flex;height: 100vh;'>
-      <!--      侧边栏-->
+    <!-- 头部 -->
+    <Header style="position: fixed" />
+    <!-- 主体 -->
+    <div style="display: flex; height: 100vh;">
+      <!-- 侧边栏 -->
       <div class="sidebar">
-        <Menu_left/>
+        <MenuLeft />
       </div>
-      <!--      内容区域-->
-      <div class='main-view'>
-        <router-view/>
+      <!-- 内容区域 -->
+      <div class="main-view">
+        <router-view />
       </div>
     </div>
   </div>
 </template>
 
-<script>
-import Header from "@/components/Header";
-import Menu_left from "@/components/Menu_left";
-export default {
-  name: "Layout",
-  components:{
-    Header,
-    Menu_left
-  }
-}
+<script lang="ts" setup>
+
+import Header from "@/components/Header.vue"
+import MenuLeft from "@/components/Menu_left.vue"
+
 </script>
 
 <style>
@@ -38,7 +33,7 @@ export default {
   z-index: 1000;
 }
 
-.main-view{
+.main-view {
   flex: 1;
   background-color: #F5F5F5;
   padding-top: 51px; /* 考虑头部的高度 */
